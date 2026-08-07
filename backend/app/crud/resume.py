@@ -7,11 +7,15 @@ def create_resume(
     db: Session,
     filename: str,
     file_path: str,
+    resume_text: str,
+    email: str,
     owner_id: int
 ):
     new_resume = Resume(
         filename=filename,
         file_path=file_path,
+        resume_text=resume_text,
+        email=email,
         owner_id=owner_id
     )
 

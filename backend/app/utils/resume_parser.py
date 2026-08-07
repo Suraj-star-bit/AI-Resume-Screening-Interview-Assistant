@@ -17,40 +17,35 @@ def extract_phone(text: str):
     return None
 
 SKILLS = [
-    "Python",
-    "Java",
-    "C++",
-    "SQL",
-    "PostgreSQL",
-    "FastAPI",
-    "Flask",
-    "React",
-    "Node.js",
-    "Docker",
-    "Git",
-    "HTML",
-    "CSS",
-    "JavaScript",
-    "NumPy",
-    "Pandas",
-    "Matplotlib",
-    "Machine Learning",
-    "Deep Learning",
-    "TensorFlow",
-    "PyTorch",
-    "Scikit-learn"
+    "Python", "Java", "C", "C++", "C#", "JavaScript", "TypeScript",
+    "HTML", "CSS", "React", "Next.js", "Angular", "Vue",
+    "Node.js", "Express", "FastAPI", "Flask", "Django",
+    "SQL", "PostgreSQL", "MySQL", "MongoDB", "SQLite",
+    "Git", "GitHub", "Docker", "Kubernetes",
+    "AWS", "Azure", "GCP",
+    "REST API", "GraphQL",
+    "JWT", "OAuth",
+    "Machine Learning", "Deep Learning",
+    "Artificial Intelligence", "NLP",
+    "TensorFlow", "PyTorch",
+    "Scikit-learn", "Pandas", "NumPy",
+    "OpenCV", "LangChain", "RAG",
+    "LLM", "Ollama",
+    "Redis", "Celery",
+    "Linux", "Bash"
 ]
 
 
-def extract_skills(text: str):
-    found_skills = []
+def extract_skills(text):
+    found = []
 
-    text_lower = text.lower()
+    text = text.lower()
+
     for skill in SKILLS:
-        if skill.lower() in text_lower:
-            found_skills.append(skill)
+        if skill.lower() in text:
+            found.append(skill)
 
-        return found_skills
+    return sorted(list(set(found)))
 
 
 def extract_education(text: str):
@@ -101,3 +96,14 @@ def extract_experience(text: str):
             found.append(keyword)
 
     return found
+
+def extract_job_skills(text:str):
+    found = []
+
+    text = text.lower()
+
+    for skill in SKILLS:
+        if skill.lower() in text:
+            found.append(skill)
+
+    return sorted(list(set(found)))

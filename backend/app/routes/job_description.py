@@ -9,6 +9,7 @@ from app.schemas.job_description import (
     JobDescriptionCreate,
     JobDescriptionResponse
 )
+from app.utils.resume_parser import extract_job_skills
 
 router = APIRouter(
     prefix="/job-descriptions",
@@ -24,6 +25,15 @@ def create_job(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+
+    # Extract required skills
+    skills = extract_job_skills(job.description)
+
+    print("\n========== JOB DESCRIPTION ==========")
+    print("Title:", job.title)
+    print("Required Skills:", skills)
+    print("=====================================\n")
+
     return create_job_description(
         db=db,
         title=job.title,

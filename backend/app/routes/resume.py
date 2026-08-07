@@ -56,6 +56,8 @@ def upload_resume(
         db=db,
         filename=file.filename,
         file_path=file_path,
+        resume_text=resume_text,
+        email=email,
         owner_id=current_user.id
     )
 
