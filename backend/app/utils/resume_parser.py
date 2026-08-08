@@ -20,7 +20,7 @@ SKILLS = [
     "Python", "Java", "C", "C++", "C#", "JavaScript", "TypeScript",
     "HTML", "CSS", "React", "Next.js", "Angular", "Vue",
     "Node.js", "Express", "FastAPI", "Flask", "Django",
-    "SQL", "PostgreSQL", "MySQL", "MongoDB", "SQLite",
+    "SQL", "SQLAlchemy", "PostgreSQL", "MySQL", "MongoDB", "SQLite",
     "Git", "GitHub", "Docker", "Kubernetes",
     "AWS", "Azure", "GCP",
     "REST API", "GraphQL",
@@ -42,7 +42,9 @@ def extract_skills(text):
     text = text.lower()
 
     for skill in SKILLS:
-        if skill.lower() in text:
+        pattern = r"\b" + re.escape(skill.lower()) + r"\b"
+
+        if re.search(pattern, text):
             found.append(skill)
 
     return sorted(list(set(found)))
@@ -97,13 +99,15 @@ def extract_experience(text: str):
 
     return found
 
-def extract_job_skills(text:str):
+def extract_job_skills(text: str):
     found = []
 
     text = text.lower()
 
     for skill in SKILLS:
-        if skill.lower() in text:
+        pattern = r"\b" + re.escape(skill.lower()) + r"\b"
+
+        if re.search(pattern, text):
             found.append(skill)
 
     return sorted(list(set(found)))

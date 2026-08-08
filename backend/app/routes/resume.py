@@ -15,6 +15,9 @@ from app.utils.resume_parser import (
     extract_education,
     extract_experience
 )
+from app.crud.resume_skill import create_resume_skill
+
+
 router = APIRouter(
     prefix="/resumes",
     tags=["Resumes"]
@@ -53,12 +56,19 @@ def upload_resume(
     print("=================================")
 
     resume = create_resume(
-        db=db,
-        filename=file.filename,
-        file_path=file_path,
-        resume_text=resume_text,
-        email=email,
-        owner_id=current_user.id
-    )
+    db=db,
+    filename=file.filename,
+    file_path=file_path,
+    resume_text=resume_text,
+    email=email,
+    owner_id=current_user.id
+)
+
+    for skill in skills:
+        create_resume_skill(
+            db=db,
+            resume_id=resume.id,
+            skill=skill
+        )
 
     return resume

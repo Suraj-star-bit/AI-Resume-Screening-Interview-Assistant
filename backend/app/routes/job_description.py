@@ -10,6 +10,7 @@ from app.schemas.job_description import (
     JobDescriptionResponse
 )
 from app.utils.resume_parser import extract_job_skills
+from app.crud.job_skill import create_job_skill
 
 router = APIRouter(
     prefix="/job-descriptions",
@@ -34,9 +35,20 @@ def create_job(
     print("Required Skills:", skills)
     print("=====================================\n")
 
-    return create_job_description(
+    # Create the job first
+    new_job = create_job_description(
         db=db,
         title=job.title,
         description=job.description,
         owner_id=current_user.id
     )
+
+    # Save each required skill
+    for skill in skills:
+        create_job_skill(
+            db=db,
+            job_id=new_job.id,
+            skill=skill
+        )
+
+    return new_job
