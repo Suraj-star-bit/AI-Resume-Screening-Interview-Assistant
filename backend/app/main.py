@@ -7,18 +7,34 @@ from app.routes.resume import router as resume_router
 from app.routes.job_description import router as job_description_router
 from app.models.job_description import JobDescription
 from app.routes.ats import router as ats_router
+from app.routes.candidate_ranking import router as candidate_ranking_router
+from app.routes.recruiter_dashboard import router as recruiter_dashboard_router
+
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 
-app = FastAPI(
-    title="AI Resume Screening & Interview Assistant API"
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
 
 app.include_router(user_router)
 app.include_router(resume_router)
 app.include_router(job_description_router)
 app.include_router(ats_router)
+app.include_router(candidate_ranking_router)
+app.include_router(recruiter_dashboard_router)
 
 
 @app.get("/")
