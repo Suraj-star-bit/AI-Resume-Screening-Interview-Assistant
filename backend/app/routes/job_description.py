@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db, get_current_user
 from app.models.user import User
 
-from app.crud.job_description import create_job_description
+from app.crud.job_description import (
+    create_job_description,
+    get_jobs_by_owner
+)
 from app.schemas.job_description import (
     JobDescriptionCreate,
     JobDescriptionResponse
@@ -52,3 +55,13 @@ def create_job(
         )
 
     return new_job
+
+@router.get("/")
+def get_my_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return get_jobs_by_owner(
+        db=db,
+        owner_id=current_user.id
+    )

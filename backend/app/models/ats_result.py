@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, Float, Text, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
 
 from app.database import Base
@@ -26,6 +26,7 @@ class ATSResult(Base):
     matched_skills = Column(Text, nullable=True)
 
     missing_skills = Column(Text, nullable=True)
+    status = Column(String, default="Review")
 
     created_at = Column(
         DateTime(timezone=True),
