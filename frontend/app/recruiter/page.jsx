@@ -172,7 +172,16 @@ export default function RecruiterDashboard() {
                                         className="border-t border-gray-200"
                                     >
                                         <td className="p-4 font-medium">
-                                            Resume #{candidate.resume_id}
+                                            <button
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/candidates/${candidate.resume_id}?job_id=${selectedJobId}`
+                                                    )
+                                                }
+                                                className="text-blue-600 hover:underline"
+                                            >
+                                                Resume #{candidate.resume_id}
+                                            </button>
                                         </td>
 
                                         <td className="p-4">
