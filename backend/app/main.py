@@ -12,6 +12,10 @@ from app.routes.candidate_ranking import router as candidate_ranking_router
 from app.routes.recruiter_dashboard import router as recruiter_dashboard_router
 from app.routes.candidate_details import router as candidate_details_router
 from app.routes.candidate_status import router as candidate_status_router
+from app.models.interview import Interview
+from app.routes.interview import router as interview_router
+from app.models.interview_question import InterviewQuestion
+from app.routes.interview_question import router as interview_question_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -46,6 +50,8 @@ app.include_router(candidate_ranking_router)
 app.include_router(recruiter_dashboard_router)
 app.include_router(candidate_details_router)
 app.include_router(candidate_status_router)
+app.include_router(interview_router)
+app.include_router(interview_question_router)
 
 
 @app.get("/")
