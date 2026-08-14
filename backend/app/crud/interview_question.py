@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.interview_question import InterviewQuestion
 
 
+
 def create_interview_question(
     db: Session,
     interview_id: int,
@@ -34,3 +35,24 @@ def get_interview_questions(
         .order_by(InterviewQuestion.id.asc())
         .all()
     )
+
+def submit_answer(
+    db: Session,
+    question_id: int,
+    answer: str
+):
+    question = (
+        db.query(InterviewQuestion)
+        .filter(InterviewQuestion.id == question_id)
+        .first()
+    )
+
+    if not question:
+        return None
+
+    question.answer = answer
+
+    db.commit()
+    db.refresh(question)
+
+    return question

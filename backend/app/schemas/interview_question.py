@@ -21,3 +21,6 @@ class InterviewQuestionResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class InterviewAnswerCreate(BaseModel):
+    answer: str
