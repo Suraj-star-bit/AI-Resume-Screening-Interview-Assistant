@@ -1,13 +1,10 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-
-class InterviewCreate(BaseModel):
-    resume_id: int
-    job_id: int
+from app.schemas.interview_question import InterviewQuestionResponse
 
 
-class InterviewResponse(BaseModel):
+class InterviewResultResponse(BaseModel):
     id: int
     resume_id: int
     job_id: int
@@ -16,6 +13,4 @@ class InterviewResponse(BaseModel):
     recommendation: str | None = None
     created_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    questions: list[InterviewQuestionResponse]

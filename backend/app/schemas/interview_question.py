@@ -8,6 +8,10 @@ class InterviewQuestionCreate(BaseModel):
     question_type: str
 
 
+class InterviewAnswerCreate(BaseModel):
+    answer: str
+
+
 class InterviewQuestionResponse(BaseModel):
     id: int
     interview_id: int
@@ -21,6 +25,3 @@ class InterviewQuestionResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
-
-class InterviewAnswerCreate(BaseModel):
-    answer: str
