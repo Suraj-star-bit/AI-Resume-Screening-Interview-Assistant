@@ -164,12 +164,25 @@ const updateStatus = async (status) => {
                         </button>
 
                         <button
-                            onClick={() => updateStatus("Interview")}
-                            disabled={updatingStatus}
-                            className="rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
-                        >
-                            Move to Interview
-                        </button>
+                        onClick={async () => {
+                            try {
+                                const response = await api.post("/interviews/", {
+                                    resume_id: Number(resumeId),
+                                    job_id: Number(jobId),
+                                });
+
+                                alert(`Interview created successfully! Interview ID: ${response.data.id}`);
+
+                            } catch (error) {
+                                console.log("Failed to create interview:", error);
+                                alert("Failed to create interview");
+                            }
+                        }}
+                        disabled={updatingStatus}
+                        className="rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
+                    >
+                        Move to Interview
+                    </button>
 
                     </div>
                 </div>

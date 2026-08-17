@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 
 from app.crud.interview import create_interview
-from app.crud.interview_question import get_interview_questions
+from app.crud.interview_question import (
+    create_interview_question,
+    get_interview_questions
+)
 
 from app.services.interview_generator import (
     get_interview_context,
@@ -46,6 +49,7 @@ def start_interview(
     )
 
 
+
 @router.post(
     "/{interview_id}/generate-questions",
     response_model=list[InterviewQuestionResponse]
@@ -54,6 +58,15 @@ def generate_questions(
     interview_id: int,
     db: Session = Depends(get_db)
 ):
+    # Check whether questions already exist
+    existing_questions = get_interview_questions(
+        db=db,
+        interview_id=interview_id
+    )
+
+    if existing_questions:
+        return existing_questions
+
     # Get interview context
     context = get_interview_context(
         db=db,
@@ -88,6 +101,7 @@ def generate_questions(
         saved_questions.append(saved_question)
 
     return saved_questions
+
 
 @router.post(
     "/{interview_id}/evaluate",
