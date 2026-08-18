@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
 
 export default function InterviewPage() {
@@ -10,10 +10,54 @@ export default function InterviewPage() {
 
     const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState({});
+    const [interview, setInterview] = useState(null);
+
     const [loading, setLoading] = useState(false);
+    const [loadingResult, setLoadingResult] = useState(true);
     const [submitting, setSubmitting] = useState({});
-    const [error, setError] = useState("");
     const [evaluating, setEvaluating] = useState({});
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (interviewId) {
+            loadInterviewResult();
+        }
+    }, [interviewId]);
+
+    const loadInterviewResult = async () => {
+        try {
+            setLoadingResult(true);
+            setError("");
+
+            const response = await api.get(
+                `/interviews/${interviewId}/result`
+            );
+
+            setInterview(response.data);
+            setQuestions(response.data.questions || []);
+
+            const existingAnswers = {};
+
+            (response.data.questions || []).forEach((question) => {
+                if (question.answer) {
+                    existingAnswers[question.id] = question.answer;
+                }
+            });
+
+            setAnswers(existingAnswers);
+
+        } catch (error) {
+            console.log("Failed to load interview result:", error);
+
+            if (error.response?.data?.detail) {
+                setError(error.response.data.detail);
+            } else {
+                setError("Failed to load interview.");
+            }
+        } finally {
+            setLoadingResult(false);
+        }
+    };
 
     const generateQuestions = async () => {
         try {
@@ -25,6 +69,7 @@ export default function InterviewPage() {
             );
 
             setQuestions(response.data);
+
         } catch (error) {
             console.log("Failed to generate questions:", error);
             setError("Failed to generate interview questions.");
@@ -82,7 +127,6 @@ export default function InterviewPage() {
         }
     };
 
-
     const evaluateAnswer = async (questionId) => {
         try {
             setEvaluating((previous) => ({
@@ -104,6 +148,8 @@ export default function InterviewPage() {
 
             alert("Answer evaluated successfully!");
 
+            await loadInterviewResult();
+
         } catch (error) {
             console.log("Failed to evaluate answer:", error);
 
@@ -120,7 +166,17 @@ export default function InterviewPage() {
         }
     };
 
-
+    if (loadingResult) {
+        return (
+            <main className="min-h-screen bg-gray-100 p-8">
+                <div className="mx-auto max-w-4xl">
+                    <p className="text-gray-600">
+                        Loading interview...
+                    </p>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-gray-100 p-8">
@@ -135,6 +191,56 @@ export default function InterviewPage() {
                     Interview ID: {interviewId}
                 </p>
 
+                {error && (
+                    <p className="mt-4 text-red-600">
+                        {error}
+                    </p>
+                )}
+
+                {interview && interview.status === "Completed" && (
+                    <div className="mt-6 rounded-xl bg-white p-6 shadow">
+
+                        <h2 className="text-xl font-bold text-gray-900">
+                            Interview Result
+                        </h2>
+
+                        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+
+                            <div className="rounded-lg bg-gray-50 p-4">
+                                <p className="text-sm text-gray-500">
+                                    Overall Score
+                                </p>
+
+                                <p className="mt-1 text-3xl font-bold text-blue-600">
+                                    {interview.overall_score}/10
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-gray-50 p-4">
+                                <p className="text-sm text-gray-500">
+                                    Recommendation
+                                </p>
+
+                                <p className="mt-2 font-bold text-orange-600">
+                                    {interview.recommendation}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-gray-50 p-4">
+                                <p className="text-sm text-gray-500">
+                                    Status
+                                </p>
+
+                                <p className="mt-2 font-bold text-green-600">
+                                    {interview.status}
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+                )}
+
                 <button
                     onClick={generateQuestions}
                     disabled={loading}
@@ -144,12 +250,6 @@ export default function InterviewPage() {
                         ? "Generating..."
                         : "Generate Interview Questions"}
                 </button>
-
-                {error && (
-                    <p className="mt-4 text-red-600">
-                        {error}
-                    </p>
-                )}
 
                 <div className="mt-8 space-y-6">
 
@@ -172,7 +272,11 @@ export default function InterviewPage() {
                             </p>
 
                             <textarea
-                                value={answers[question.id] || question.answer || ""}
+                                value={
+                                    answers[question.id] ||
+                                    question.answer ||
+                                    ""
+                                }
                                 onChange={(event) =>
                                     handleAnswerChange(
                                         question.id,
@@ -196,39 +300,36 @@ export default function InterviewPage() {
                                     : "Submit Answer"}
                             </button>
 
-                    
-                        {question.answer && (
-                            <button
-                                onClick={() => evaluateAnswer(question.id)}
-                                disabled={evaluating[question.id]}
-                                className="ml-3 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
-                            >
-                                {evaluating[question.id]
-                                    ? "Evaluating..."
-                                    : "Evaluate Answer"}
-                            </button>
-                        )}
+                            {question.answer && (
+                                <button
+                                    onClick={() =>
+                                        evaluateAnswer(question.id)
+                                    }
+                                    disabled={evaluating[question.id]}
+                                    className="ml-3 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                                >
+                                    {evaluating[question.id]
+                                        ? "Evaluating..."
+                                        : "Evaluate Answer"}
+                                </button>
+                            )}
 
-                    
-                        {question.score !== null && (
-                            <div className="mt-6 rounded-lg bg-gray-50 p-4">
+                            {question.score !== null &&
+                                question.score !== undefined && (
+                                    <div className="mt-6 rounded-lg bg-gray-50 p-4">
 
-                                <p className="font-semibold text-gray-900">
-                                    Score: {question.score}/10
-                                </p>
+                                        <p className="font-semibold text-gray-900">
+                                            Score: {question.score}/10
+                                        </p>
 
-                                <p className="mt-2 text-gray-700">
-                                    {question.feedback}
-                                </p>
+                                        <p className="mt-2 text-gray-700">
+                                            {question.feedback}
+                                        </p>
 
-                            </div>
-                        )}
-
-
-
+                                    </div>
+                                )}
 
                         </div>
-                        
                     ))}
 
                 </div>
