@@ -16,7 +16,9 @@ export default function CandidateDetails() {
     const jobId = searchParams.get("job_id");
 
     const [candidate, setCandidate] = useState(null);
+    const [interview, setInterview] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadingInterview, setLoadingInterview] = useState(true);
     const [error, setError] = useState("");
 
     const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -46,22 +48,35 @@ const updateStatus = async (status) => {
 };
 
     useEffect(() => {
-        if (!resumeId || !jobId) {
-            return;
-        }
+    if (!resumeId || !jobId) {
+        return;
+    }
 
-        api.get(`/candidates/${resumeId}?job_id=${jobId}`)
-            .then((response) => {
-                setCandidate(response.data);
-            })
-            .catch((error) => {
-                console.log(error);
-                setError("Failed to load candidate");
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [resumeId, jobId]);
+    api.get(`/candidates/${resumeId}?job_id=${jobId}`)
+        .then((response) => {
+            setCandidate(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+            setError("Failed to load candidate");
+        })
+        .finally(() => {
+            setLoading(false);
+        });
+
+    api.get(`/interviews/candidate/${resumeId}/${jobId}/result`)
+        .then((response) => {
+            setInterview(response.data);
+        })
+        .catch((error) => {
+            console.log("No completed interview found:", error);
+            setInterview(null);
+        })
+        .finally(() => {
+            setLoadingInterview(false);
+        });
+
+}, [resumeId, jobId]);
 
     if (loading) {
         return (
@@ -186,6 +201,100 @@ const updateStatus = async (status) => {
 
                     </div>
                 </div>
+
+                {!loadingInterview && interview && (
+                    <div className="mt-8">
+
+                        <h3 className="font-semibold text-gray-900">
+                            Interview Result
+                        </h3>
+
+                        <div className="mt-4 rounded-xl bg-gray-50 p-6">
+
+                            <div className="grid gap-4 sm:grid-cols-3">
+
+                                <div>
+                                    <p className="text-sm text-gray-500">
+                                        Status
+                                    </p>
+
+                                    <p className="mt-1 font-bold text-green-600">
+                                        {interview.status}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-500">
+                                        Overall Score
+                                    </p>
+
+                                    <p className="mt-1 text-2xl font-bold text-blue-600">
+                                        {interview.overall_score}/10
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-500">
+                                        Recommendation
+                                    </p>
+
+                                    <p className="mt-1 font-bold text-orange-600">
+                                        {interview.recommendation}
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <div className="mt-6">
+
+                                <h4 className="font-semibold text-gray-900">
+                                    Question Scores
+                                </h4>
+
+                                <div className="mt-4 space-y-4">
+
+                                    {interview.questions.map((question, index) => (
+                                        <div
+                                            key={question.id}
+                                            className="rounded-lg bg-white p-4 shadow-sm"
+                                        >
+
+                                            <p className="font-semibold text-gray-900">
+                                                Question {index + 1}
+                                            </p>
+
+                                            <p className="mt-1 text-gray-700">
+                                                {question.question}
+                                            </p>
+
+                                            <p className="mt-2 font-semibold text-blue-600">
+                                                Score: {question.score}/10
+                                            </p>
+
+                                            <p className="mt-2 text-sm text-gray-600">
+                                                {question.feedback}
+                                            </p>
+
+                                        </div>
+                                    ))}
+
+                                </div>
+
+                            </div>
+
+                            <button
+                                onClick={() =>
+                                    router.push(`/interviews/${interview.id}`)
+                                }
+                                className="mt-6 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
+                            >
+                                View Full Interview
+                            </button>
+
+                        </div>
+
+                    </div>
+                )}
 
                 <div className="mt-8">
                     <a
