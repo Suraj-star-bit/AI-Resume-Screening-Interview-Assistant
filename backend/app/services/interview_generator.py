@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from openai import OpenAI
 
-from app.config import OPENAI_API_KEY
+import requests
+
 from app.models.interview import Interview
 from app.models.resume import Resume
 from app.models.job_description import JobDescription
@@ -47,7 +47,7 @@ def get_interview_context(
         "job_skills": job_skills
     }
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+
 
 
 def generate_interview_questions(
@@ -85,25 +85,29 @@ Rules:
 7. Return only the questions, one per line.
 """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an expert technical interviewer."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.7,
+    response = requests.post(
+        "http://localhost:11434/api/chat",
+        json={
+            "model": "llama3.2",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are an expert technical interviewer."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "stream": False
+        }
     )
 
-    content = response.choices[0].message.content
+    response.raise_for_status()
 
-    if not content:
-        return []
+    data = response.json()
+
+    content = data["message"]["content"]
 
     questions = [
         line.strip()
