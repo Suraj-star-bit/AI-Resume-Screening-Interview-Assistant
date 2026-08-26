@@ -1,92 +1,101 @@
+import requests
+import json
+
+
 def evaluate_answer(
     question: str,
     answer: str,
     job_skills: list[str]
 ):
     """
-    Evaluate a candidate's interview answer
-    using simple rule-based logic.
+    Evaluate a candidate's interview answer using Llama 3.2
+    through Ollama.
     """
 
-    # Make everything lowercase so comparison is easier
-    question_lower = question.lower()
-    answer_lower = answer.lower()
-
-    score = 0
-    feedback = []
-
-    # 1. Check whether the candidate actually answered
     if not answer.strip():
         return {
-            "score": 0,
+            "score": 0.0,
             "feedback": "The candidate did not provide an answer.",
             "recommendation": "Reject"
         }
 
-    # 2. Check answer length
-    word_count = len(answer.split())
+    skills = ", ".join(job_skills)
 
-    if word_count >= 30:
-        score += 3
-        feedback.append("The answer provides sufficient detail.")
-    elif word_count >= 10:
-        score += 2
-        feedback.append("The answer provides some detail.")
-    else:
-        score += 1
-        feedback.append("The answer is very brief.")
+    prompt = f"""
+You are an expert technical interviewer.
 
-    # 3. Check whether required job skills appear
-    matched_skills = []
+Evaluate the candidate's answer.
 
-    for skill in job_skills:
-        if skill.lower() in answer_lower:
-            matched_skills.append(skill)
+QUESTION:
+{question}
 
-    if matched_skills:
-        score += 4
-        feedback.append(
-            f"The answer mentions relevant skills: "
-            f"{', '.join(matched_skills)}."
-        )
-    else:
-        feedback.append(
-            "The answer does not mention any of the required job skills."
-        )
+CANDIDATE ANSWER:
+{answer}
 
-    # 4. Check whether the candidate acknowledges missing experience
-    negative_phrases = [
-        "i have not",
-        "i don't have",
-        "no experience",
-        "not used",
-        "haven't used"
-    ]
+REQUIRED JOB SKILLS:
+{skills}
 
-    admits_missing_experience = any(
-        phrase in answer_lower
-        for phrase in negative_phrases
+Evaluate the answer based on:
+1. Technical correctness
+2. Understanding of the topic
+3. Relevance to the question
+4. Practical experience
+5. Clarity and completeness
+
+Give a score from 0 to 10.
+
+Return ONLY valid JSON in exactly this format:
+
+{{
+    "score": 7,
+    "feedback": "Brief explanation of the candidate's strengths and weaknesses.",
+    "recommendation": "Strong"
+}}
+
+Recommendation must be one of:
+Strong
+Needs Improvement
+Weak
+"""
+
+    response = requests.post(
+        "http://localhost:11434/api/chat",
+        json={
+            "model": "llama3.2",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are an expert technical interviewer. Return only valid JSON."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "stream": False
+        }
     )
 
-    if admits_missing_experience:
-        feedback.append(
-            "The candidate openly acknowledges limited experience "
-            "with the technology."
-        )
+    response.raise_for_status()
 
-    # 5. Final score
-    if score >= 7:
-        recommendation = "Strong"
-    elif score >= 5:
-        recommendation = "Needs Improvement"
-    else:
-        recommendation = "Weak"
+    data = response.json()
+
+    content = data["message"]["content"].strip()
+
+    # Remove markdown code fences if Llama adds them
+    if content.startswith("```"):
+        content = content.replace("```json", "")
+        content = content.replace("```", "")
+        content = content.strip()
+
+    result = json.loads(content)
 
     return {
-        "score": float(score),
-        "feedback": " ".join(feedback),
-        "recommendation": recommendation
+        "score": float(result["score"]),
+        "feedback": result["feedback"],
+        "recommendation": result["recommendation"]
     }
+
 
 def calculate_overall_score(scores: list[float]):
     """

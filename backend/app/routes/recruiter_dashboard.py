@@ -25,15 +25,17 @@ def recruiter_dashboard(
     )
 
     candidates = [
-        {
-            "resume_id": result.resume_id,
-            "score": result.score,
-            "matched_skills": result.matched_skills,
-            "missing_skills": result.missing_skills,
-            "status": result.status
-        }
-        for result in results
-    ]
+    {
+        "resume_id": result["resume_id"],
+        "score": result["score"],
+        "matched_skills": result["matched_skills"],
+        "missing_skills": result["missing_skills"],
+        "status": result["status"],
+        "interview_score": result["interview_score"],
+        "recommendation": result["recommendation"]
+    }
+    for result in results
+]
 
     return {
         "job_id": job_id,

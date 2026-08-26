@@ -109,13 +109,23 @@ Rules:
 
     content = data["message"]["content"]
 
-    questions = [
-        line.strip()
-        for line in content.split("\n")
-        if line.strip()
-    ]
+    questions = []
 
-    return questions
+    for line in content.split("\n"):
+        line = line.strip()
+
+        if not line:
+            continue
+
+        if line.lower().startswith("here are"):
+            continue
+
+        if line[0].isdigit() and "." in line[:3]:
+            line = line.split(".", 1)[1].strip()
+
+        questions.append(line)
+
+    return questions[:5]
 
 def generate_mock_interview_questions(
     job_title: str,

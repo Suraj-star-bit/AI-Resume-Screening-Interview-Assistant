@@ -12,7 +12,10 @@ from app.schemas.interview_question import (
     InterviewQuestionResponse,
     InterviewAnswerCreate
 )
-from app.services.interview_evaluator import evaluate_answer
+from app.services.interview_evaluator import (
+    evaluate_answer,
+    calculate_overall_score
+)
 from app.models.interview_question import InterviewQuestion
 from app.models.interview import Interview
 from app.models.job_skill import JobSkill
@@ -78,10 +81,7 @@ def submit_question_answer(
 
     return question
 
-@router.post(
-    "/{question_id}/evaluate",
-    response_model=InterviewQuestionResponse
-)
+@router.post("/{question_id}/evaluate", response_model=InterviewQuestionResponse)
 def evaluate_question(
     question_id: int,
     db: Session = Depends(get_db)
@@ -141,5 +141,41 @@ def evaluate_question(
 
     db.commit()
     db.refresh(question)
+
+    # Get all evaluated questions for this interview
+    all_questions = (
+        db.query(InterviewQuestion)
+        .filter(InterviewQuestion.interview_id == interview.id)
+        .all()
+    )
+
+    scores = [
+        q.score
+        for q in all_questions
+        if q.score is not None
+    ]
+
+        # Calculate overall interview score
+    overall = calculate_overall_score(scores)
+
+    interview.overall_score = overall["overall_score"]
+    interview.recommendation = overall["recommendation"]
+
+    # Check whether all questions have been evaluated
+    all_questions_evaluated = (
+        len(all_questions) > 0
+        and all(
+            q.score is not None
+            for q in all_questions
+        )
+    )
+
+    # Mark interview as completed only when
+    # every question has been evaluated
+    if all_questions_evaluated:
+        interview.status = "Completed"
+
+    db.commit()
+    db.refresh(interview)
 
     return question

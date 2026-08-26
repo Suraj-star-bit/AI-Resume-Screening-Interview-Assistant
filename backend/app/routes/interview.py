@@ -11,7 +11,7 @@ from app.crud.interview_question import (
 
 from app.services.interview_generator import (
     get_interview_context,
-    generate_mock_interview_questions
+    generate_interview_questions
 )
 
 from app.services.interview_evaluator import (
@@ -80,7 +80,7 @@ def generate_questions(
         )
 
     # Generate questions
-    questions = generate_mock_interview_questions(
+    questions = generate_interview_questions(
         job_title=context["job_title"],
         job_description=context["job_description"],
         job_skills=context["job_skills"],

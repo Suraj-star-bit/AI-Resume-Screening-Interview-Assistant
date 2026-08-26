@@ -16,6 +16,7 @@ from app.models.interview import Interview
 from app.routes.interview import router as interview_router
 from app.models.interview_question import InterviewQuestion
 from app.routes.interview_question import router as interview_question_router
+from app.routes.interview_question import router as interview_question_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
