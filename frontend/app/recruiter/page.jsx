@@ -10,8 +10,37 @@ export default function RecruiterDashboard() {
     const [jobs, setJobs] = useState([]);
     const [selectedJobId, setSelectedJobId] = useState("");
     const [candidates, setCandidates] = useState([]);
+    const [interviews, setInterviews] = useState({});
     const [loadingJobs, setLoadingJobs] = useState(true);
     const [loadingCandidates, setLoadingCandidates] = useState(false);
+    const [loadingInterviews, setLoadingInterviews] = useState(false);
+
+
+    const updateCandidateStatus = async (resumeId, status) => {
+    try {
+        await api.patch(
+            `/candidates/${resumeId}/status?job_id=${selectedJobId}`,
+            {
+                status: status
+            }
+        );
+
+        setCandidates((currentCandidates) =>
+            currentCandidates.map((candidate) =>
+                candidate.resume_id === resumeId
+                    ? {
+                        ...candidate,
+                        status: status
+                    }
+                    : candidate
+            )
+        );
+    } catch (error) {
+        console.log("Failed to update candidate status:", error);
+        alert("Failed to update candidate status");
+    }
+};
+
 
     // Get recruiter's jobs
     useEffect(() => {
@@ -41,6 +70,7 @@ export default function RecruiterDashboard() {
         }
 
         setLoadingCandidates(true);
+        setInterviews({});
 
         api.get(
             `/recruiter/dashboard?job_id=${selectedJobId}`
@@ -56,6 +86,39 @@ export default function RecruiterDashboard() {
                 setLoadingCandidates(false);
             });
     }, [selectedJobId]);
+
+    // Get interview results for candidates
+    useEffect(() => {
+        if (!selectedJobId || candidates.length === 0) {
+            return;
+        }
+
+        const fetchInterviewResults = async () => {
+            setLoadingInterviews(true);
+
+            const results = {};
+
+            await Promise.all(
+                candidates.map(async (candidate) => {
+                    try {
+                        const response = await api.get(
+                            `/interviews/candidate/${candidate.resume_id}/${selectedJobId}/result`
+                        );
+
+                        results[candidate.resume_id] = response.data;
+                    } catch (error) {
+                        // 404 means the candidate has not completed an interview
+                        results[candidate.resume_id] = null;
+                    }
+                })
+            );
+
+            setInterviews(results);
+            setLoadingInterviews(false);
+        };
+
+        fetchInterviewResults();
+    }, [candidates, selectedJobId]);
 
     return (
         <main className="min-h-screen bg-gray-100 p-8">
@@ -139,88 +202,227 @@ export default function RecruiterDashboard() {
                             No candidates found for this job.
                         </div>
                     ) : (
-                        <table className="w-full text-gray-900">
+                        <div className="overflow-x-auto">
 
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="p-4 text-left font-semibold">
-                                        Candidate
-                                    </th>
+                            <table className="w-full text-gray-900">
 
-                                    <th className="p-4 text-left font-semibold">
-                                        ATS Score
-                                    </th>
+                                <thead className="bg-gray-100">
+                                    <tr>
 
-                                    <th className="p-4 text-left font-semibold">
-                                        Matched Skills
-                                    </th>
+                                        <th className="p-4 text-left font-semibold">
+                                            Candidate
+                                        </th>
 
-                                    <th className="p-4 text-left font-semibold">
-                                        Missing Skills
-                                    </th>
+                                        <th className="p-4 text-left font-semibold">
+                                            ATS Score
+                                        </th>
 
-                                    <th className="p-4 text-left font-semibold">
-                                        Status
-                                    </th>
-                                </tr>
-                            </thead>
+                                        <th className="p-4 text-left font-semibold">
+                                            Interview Score
+                                        </th>
 
-                            <tbody>
-                                {candidates.map((candidate) => (
-                                    <tr
-                                        key={candidate.resume_id}
-                                        className="border-t border-gray-200"
-                                    >
-                                        <td className="p-4 font-medium">
-                                            <button
-                                                onClick={() =>
-                                                    router.push(
-                                                        `/candidates/${candidate.resume_id}?job_id=${selectedJobId}`
-                                                    )
-                                                }
-                                                className="text-blue-600 hover:underline"
-                                            >
-                                                Resume #{candidate.resume_id}
-                                            </button>
-                                        </td>
+                                        <th className="p-4 text-left font-semibold">
+                                            Interview Recommendation
+                                        </th>
 
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
+                                        <th className="p-4 text-left font-semibold">
+                                            Matched Skills
+                                        </th>
 
-                                                <div className="h-3 w-32 overflow-hidden rounded-full bg-gray-200">
-                                                    <div
-                                                        className="h-full rounded-full bg-blue-600"
-                                                        style={{
-                                                            width: `${candidate.score}%`
-                                                        }}
-                                                    />
-                                                </div>
+                                        <th className="p-4 text-left font-semibold">
+                                            Missing Skills
+                                        </th>
 
-                                                <span className="font-bold">
-                                                    {candidate.score}%
-                                                </span>
+                                        <th className="p-4 text-left font-semibold">
+                                            Status
+                                        </th>
 
-                                            </div>
-                                        </td>
+                                        <th className="p-4 text-left font-semibold">
+                                            Action
+                                        </th>
 
-                                        <td className="p-4 text-gray-700">
-                                            {candidate.matched_skills}
-                                        </td>
-
-                                        <td className="p-4 text-gray-700">
-                                            {candidate.missing_skills}
-                                        </td>
-
-                                        <td className="p-4">
-                                            <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800">
-                                                {candidate.status}
-                                            </span>
-                                        </td>
                                     </tr>
-                                ))}
-                            </tbody>
+                                </thead>
 
-                        </table>
+                                <tbody>
+
+                                    {candidates.map((candidate) => {
+
+                                        const interview =
+                                            interviews[candidate.resume_id];
+
+                                        return (
+                                            <tr
+                                                key={candidate.resume_id}
+                                                className="border-t border-gray-200"
+                                            >
+
+                                                {/* Candidate */}
+                                                <td className="p-4 font-medium">
+                                                    <button
+                                                        onClick={() =>
+                                                            router.push(
+                                                                `/candidates/${candidate.resume_id}?job_id=${selectedJobId}`
+                                                            )
+                                                        }
+                                                        className="text-blue-600 hover:underline"
+                                                    >
+                                                        Resume #{candidate.resume_id}
+                                                    </button>
+                                                </td>
+
+                                                {/* ATS Score */}
+                                                <td className="p-4">
+
+                                                    <div className="flex items-center gap-3">
+
+                                                        <div className="h-3 w-32 overflow-hidden rounded-full bg-gray-200">
+
+                                                            <div
+                                                                className="h-full rounded-full bg-blue-600"
+                                                                style={{
+                                                                    width: `${candidate.score}%`
+                                                                }}
+                                                            />
+
+                                                        </div>
+
+                                                        <span className="font-bold">
+                                                            {candidate.score}%
+                                                        </span>
+
+                                                    </div>
+
+                                                </td>
+
+                                                {/* Interview Score */}
+                                                <td className="p-4">
+
+                                                    {loadingInterviews ? (
+                                                        <span className="text-gray-400">
+                                                            Loading...
+                                                        </span>
+                                                    ) : interview ? (
+                                                        <span className="font-bold text-gray-900">
+                                                            {interview.overall_score}/10
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-500">
+                                                            Not Taken
+                                                        </span>
+                                                    )}
+
+                                                </td>
+
+                                                {/* Interview Recommendation */}
+                                                <td className="p-4">
+
+                                                    {interview ? (
+                                                        <span
+                                                            className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                                                                candidate.status === "Shortlisted"
+                                                                    ? "bg-green-100 text-green-800"
+                                                                    : candidate.status === "Rejected"
+                                                                    ? "bg-red-100 text-red-800"
+                                                                    : candidate.status === "Interview"
+                                                                    ? "bg-blue-100 text-blue-800"
+                                                                    : "bg-yellow-100 text-yellow-800"
+                                                            }`}
+                                                        >
+                                                            {candidate.status}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-400">
+                                                            —
+                                                        </span>
+                                                    )}
+
+                                                </td>
+
+                                                {/* Matched Skills */}
+                                                <td className="p-4 text-gray-700">
+                                                    {candidate.matched_skills || "—"}
+                                                </td>
+
+                                                {/* Missing Skills */}
+                                                <td className="p-4 text-gray-700">
+                                                    {candidate.missing_skills || "—"}
+                                                </td>
+
+                                                {/* ATS Status */}
+                                                <td className="p-4">
+
+                                                    <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800">
+                                                        {candidate.status}
+                                                    </span>
+
+                                                </td>
+
+                                                {/* Action */}
+                                                <td className="p-4">
+
+                                                    {interview ? (
+                                                        <td className="p-4">
+                                                            <div className="flex flex-col gap-2">
+
+                                                                {interview && (
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            router.push(
+                                                                                `/recruiter/interviews/${interview.id}`
+                                                                            )
+                                                                        }
+                                                                        className="whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                                                                    >
+                                                                        View Interview
+                                                                    </button>
+                                                                )}
+
+                                                                <button
+                                                                    onClick={() =>
+                                                                        updateCandidateStatus(
+                                                                            candidate.resume_id,
+                                                                            "Shortlisted"
+                                                                        )
+                                                                    }
+                                                                    disabled={candidate.status === "Shortlisted"}
+                                                                    className="whitespace-nowrap rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                >
+                                                                    Shortlist
+                                                                </button>
+
+                                                                <button
+                                                                    onClick={() =>
+                                                                        updateCandidateStatus(
+                                                                            candidate.resume_id,
+                                                                            "Rejected"
+                                                                        )
+                                                                    }
+                                                                    disabled={candidate.status === "Rejected"}
+                                                                    className="whitespace-nowrap rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                >
+                                                                    Reject
+                                                                </button>
+
+                                                            </div>
+                                                        </td>
+                                                    ) : (
+                                                        <span className="text-gray-400">
+                                                            —
+                                                        </span>
+                                                    )}
+
+                                                </td>
+
+                                            </tr>
+                                        );
+                                    })}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
                     )}
 
                 </div>

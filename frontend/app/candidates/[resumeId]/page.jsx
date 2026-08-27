@@ -179,25 +179,25 @@ const updateStatus = async (status) => {
                         </button>
 
                         <button
-                        onClick={async () => {
-                            try {
-                                const response = await api.post("/interviews/", {
-                                    resume_id: Number(resumeId),
-                                    job_id: Number(jobId),
-                                });
+                            onClick={async () => {
+                                try {
+                                    const response = await api.post("/interviews/", {
+                                        resume_id: Number(resumeId),
+                                        job_id: Number(jobId),
+                                    });
 
-                                alert(`Interview created successfully! Interview ID: ${response.data.id}`);
+                                    router.push(`/interviews/${response.data.id}`);
 
-                            } catch (error) {
-                                console.log("Failed to create interview:", error);
-                                alert("Failed to create interview");
-                            }
-                        }}
-                        disabled={updatingStatus}
-                        className="rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
-                    >
-                        Move to Interview
-                    </button>
+                                } catch (error) {
+                                    console.log("Failed to create interview:", error);
+                                    alert("Failed to create interview");
+                                }
+                            }}
+                            disabled={updatingStatus}
+                            className="rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
+                        >
+                            Move to Interview
+                        </button>
 
                     </div>
                 </div>
@@ -284,7 +284,7 @@ const updateStatus = async (status) => {
 
                             <button
                                 onClick={() =>
-                                    router.push(`/interviews/${interview.id}`)
+                                    router.push(`/recruiter/interviews/${interview.id}`)
                                 }
                                 className="mt-6 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
                             >

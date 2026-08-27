@@ -8,14 +8,15 @@ export default function InterviewPage() {
     const params = useParams();
     const interviewId = params.interviewId;
 
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [questions, setQuestions] = useState([]);
     const [answers, setAnswers] = useState({});
     const [interview, setInterview] = useState(null);
 
     const [loading, setLoading] = useState(false);
     const [loadingResult, setLoadingResult] = useState(true);
-    const [submitting, setSubmitting] = useState({});
-    const [evaluating, setEvaluating] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [evaluating, setEvaluating] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -34,11 +35,13 @@ export default function InterviewPage() {
             );
 
             setInterview(response.data);
-            setQuestions(response.data.questions || []);
+
+            const loadedQuestions = response.data.questions || [];
+            setQuestions(loadedQuestions);
 
             const existingAnswers = {};
 
-            (response.data.questions || []).forEach((question) => {
+            loadedQuestions.forEach((question) => {
                 if (question.answer) {
                     existingAnswers[question.id] = question.answer;
                 }
@@ -69,6 +72,7 @@ export default function InterviewPage() {
             );
 
             setQuestions(response.data);
+            setCurrentQuestionIndex(0);
 
         } catch (error) {
             console.log("Failed to generate questions:", error);
@@ -85,8 +89,14 @@ export default function InterviewPage() {
         }));
     };
 
-    const submitAnswer = async (questionId) => {
-        const answer = answers[questionId];
+    const submitAndEvaluate = async () => {
+        const question = questions[currentQuestionIndex];
+
+        if (!question) {
+            return;
+        }
+
+        const answer = answers[question.id];
 
         if (!answer || !answer.trim()) {
             alert("Please enter an answer first.");
@@ -94,75 +104,61 @@ export default function InterviewPage() {
         }
 
         try {
-            setSubmitting((previous) => ({
-                ...previous,
-                [questionId]: true,
-            }));
+            setSubmitting(true);
+            setError("");
 
-            const response = await api.post(
-                `/interview-questions/${questionId}/answer`,
+            // Step 1: Save answer
+            const answerResponse = await api.post(
+                `/interview-questions/${question.id}/answer`,
                 {
                     answer: answer,
                 }
             );
 
             setQuestions((previous) =>
-                previous.map((question) =>
-                    question.id === questionId
-                        ? response.data
-                        : question
+                previous.map((item) =>
+                    item.id === question.id
+                        ? answerResponse.data
+                        : item
                 )
             );
 
-            alert("Answer submitted successfully!");
+            // Step 2: Evaluate answer with Llama
+            setEvaluating(true);
 
-        } catch (error) {
-            console.log("Failed to submit answer:", error);
-            alert("Failed to submit answer.");
-        } finally {
-            setSubmitting((previous) => ({
-                ...previous,
-                [questionId]: false,
-            }));
-        }
-    };
-
-    const evaluateAnswer = async (questionId) => {
-        try {
-            setEvaluating((previous) => ({
-                ...previous,
-                [questionId]: true,
-            }));
-
-            const response = await api.post(
-                `/interview-questions/${questionId}/evaluate`
+            const evaluationResponse = await api.post(
+                `/interview-questions/${question.id}/evaluate`
             );
 
             setQuestions((previous) =>
-                previous.map((question) =>
-                    question.id === questionId
-                        ? response.data
-                        : question
+                previous.map((item) =>
+                    item.id === question.id
+                        ? evaluationResponse.data
+                        : item
                 )
             );
 
-            alert("Answer evaluated successfully!");
-
+            // Refresh overall interview result
             await loadInterviewResult();
 
+            // Move to next question after evaluation
+            if (currentQuestionIndex < questions.length - 1) {
+                setCurrentQuestionIndex(
+                    (previous) => previous + 1
+                );
+            }
+
         } catch (error) {
-            console.log("Failed to evaluate answer:", error);
+            console.log("Failed to submit/evaluate answer:", error);
 
             if (error.response?.data?.detail) {
-                alert(error.response.data.detail);
+                setError(error.response.data.detail);
             } else {
-                alert("Failed to evaluate answer.");
+                setError("Failed to submit answer.");
             }
         } finally {
-            setEvaluating((previous) => ({
-                ...previous,
-                [questionId]: false,
-            }));
+            setSubmitting(false);
+            setEvaluating(false);
         }
     };
 
@@ -178,9 +174,22 @@ export default function InterviewPage() {
         );
     }
 
+    const currentQuestion = questions[currentQuestionIndex];
+
+    const interviewFinished =
+    interview?.status === "Completed" ||
+    (
+        questions.length > 0 &&
+        currentQuestionIndex >= questions.length - 1 &&
+        questions.every(
+            (question) =>
+                question.score !== null &&
+                question.score !== undefined
+        )
+    );
+
     return (
         <main className="min-h-screen bg-gray-100 p-8">
-
             <div className="mx-auto max-w-4xl">
 
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -197,145 +206,154 @@ export default function InterviewPage() {
                     </p>
                 )}
 
-                {interview && interview.status === "Completed" && (
-                    <div className="mt-6 rounded-xl bg-white p-6 shadow">
+                {questions.length === 0 && (
+                    <button
+                        onClick={generateQuestions}
+                        disabled={loading}
+                        className="mt-6 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        {loading
+                            ? "Generating..."
+                            : "Generate Interview Questions"}
+                    </button>
+                )}
 
-                        <h2 className="text-xl font-bold text-gray-900">
-                            Interview Result
+                {currentQuestion && !interviewFinished && (
+                    <div className="mt-8 rounded-xl bg-white p-8 shadow">
+
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-blue-600">
+                                Question {currentQuestionIndex + 1} of{" "}
+                                {questions.length}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                                {currentQuestion.question_type}
+                            </p>
+                        </div>
+
+                        <h2 className="mt-4 text-xl font-semibold leading-relaxed text-gray-900">
+                            {currentQuestion.question}
                         </h2>
 
-                        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                        <textarea
+                            value={answers[currentQuestion.id] || ""}
+                            onChange={(event) =>
+                                handleAnswerChange(
+                                    currentQuestion.id,
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Write your answer here..."
+                            rows={8}
+                            className="mt-6 w-full rounded-lg border border-gray-300 p-4 text-gray-900 outline-none focus:border-blue-600"
+                        />
 
-                            <div className="rounded-lg bg-gray-50 p-4">
-                                <p className="text-sm text-gray-500">
-                                    Overall Score
-                                </p>
+                        <button
+                            onClick={submitAndEvaluate}
+                            disabled={submitting || evaluating}
+                            className="mt-4 w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            {submitting
+                                ? "Submitting..."
+                                : evaluating
+                                ? "AI is evaluating..."
+                                : "Submit Answer"}
+                        </button>
 
-                                <p className="mt-1 text-3xl font-bold text-blue-600">
-                                    {interview.overall_score}/10
-                                </p>
+                        {currentQuestion.score !== null &&
+                            currentQuestion.score !== undefined && (
+                                <div className="mt-6 rounded-lg bg-gray-50 p-5">
+
+                                    <p className="font-semibold text-gray-900">
+                                        Score: {currentQuestion.score}/10
+                                    </p>
+
+                                    <p className="mt-2 text-gray-700">
+                                        {currentQuestion.feedback}
+                                    </p>
+
+                                </div>
+                            )}
+
+                    </div>
+                )}
+
+                {interviewFinished && interview && (
+                    <div className="mt-8 rounded-xl bg-white p-8 shadow">
+
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            Interview Complete 🎉
+                        </h2>
+
+                        <div className="mt-6 rounded-lg bg-gray-50 p-6">
+
+                            <p className="text-sm text-gray-500">
+                                Overall Score
+                            </p>
+
+                            <p className="mt-2 text-4xl font-bold text-blue-600">
+                                {interview.overall_score}/10
+                            </p>
+
+                            <p className="mt-4 text-sm text-gray-500">
+                                Recommendation
+                            </p>
+
+                            <p className="mt-1 text-xl font-bold text-orange-600">
+                                {interview.recommendation}
+                            </p>
+
+                        </div>
+
+                        <div className="mt-6">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Question Results
+                            </h3>
+
+                            <div className="mt-4 space-y-4">
+
+                                {questions.map((question, index) => (
+                                    <div
+                                        key={question.id}
+                                        className="rounded-lg border border-gray-200 p-4"
+                                    >
+                                        <p className="font-semibold text-gray-900">
+                                            Question {index + 1}
+                                        </p>
+
+                                        <p className="mt-2 text-gray-700">
+                                            {question.question}
+                                        </p>
+                                        {question.answer && (
+                                            <div className="mt-4 rounded-lg bg-gray-50 p-4">
+                                                <p className="text-sm font-semibold text-gray-500">
+                                                    Candidate Answer
+                                                </p>
+
+                                                <p className="mt-2 whitespace-pre-wrap text-gray-700">
+                                                    {question.answer}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <p className="mt-3 font-semibold text-blue-600">
+                                            Score: {question.score}/10
+                                        </p>
+
+                                        <p className="mt-2 text-gray-600">
+                                            {question.feedback}
+                                        </p>
+                                    </div>
+                                ))}
+
                             </div>
-
-                            <div className="rounded-lg bg-gray-50 p-4">
-                                <p className="text-sm text-gray-500">
-                                    Recommendation
-                                </p>
-
-                                <p className="mt-2 font-bold text-orange-600">
-                                    {interview.recommendation}
-                                </p>
-                            </div>
-
-                            <div className="rounded-lg bg-gray-50 p-4">
-                                <p className="text-sm text-gray-500">
-                                    Status
-                                </p>
-
-                                <p className="mt-2 font-bold text-green-600">
-                                    {interview.status}
-                                </p>
-                            </div>
-
                         </div>
 
                     </div>
                 )}
 
-                <button
-                    onClick={generateQuestions}
-                    disabled={loading}
-                    className="mt-6 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                    {loading
-                        ? "Generating..."
-                        : "Generate Interview Questions"}
-                </button>
-
-                <div className="mt-8 space-y-6">
-
-                    {questions.map((question, index) => (
-                        <div
-                            key={question.id}
-                            className="rounded-xl bg-white p-6 shadow"
-                        >
-
-                            <p className="text-sm font-semibold text-blue-600">
-                                Question {index + 1}
-                            </p>
-
-                            <h2 className="mt-2 text-lg font-semibold text-gray-900">
-                                {question.question}
-                            </h2>
-
-                            <p className="mt-2 text-sm text-gray-500">
-                                Type: {question.question_type}
-                            </p>
-
-                            <textarea
-                                value={
-                                    answers[question.id] ||
-                                    question.answer ||
-                                    ""
-                                }
-                                onChange={(event) =>
-                                    handleAnswerChange(
-                                        question.id,
-                                        event.target.value
-                                    )
-                                }
-                                placeholder="Write your answer here..."
-                                rows={5}
-                                className="mt-4 w-full rounded-lg border border-gray-300 p-4 text-gray-900 outline-none focus:border-blue-600"
-                            />
-
-                            <button
-                                onClick={() =>
-                                    submitAnswer(question.id)
-                                }
-                                disabled={submitting[question.id]}
-                                className="mt-4 rounded-lg bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-50"
-                            >
-                                {submitting[question.id]
-                                    ? "Submitting..."
-                                    : "Submit Answer"}
-                            </button>
-
-                            {question.answer && (
-                                <button
-                                    onClick={() =>
-                                        evaluateAnswer(question.id)
-                                    }
-                                    disabled={evaluating[question.id]}
-                                    className="ml-3 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
-                                >
-                                    {evaluating[question.id]
-                                        ? "Evaluating..."
-                                        : "Evaluate Answer"}
-                                </button>
-                            )}
-
-                            {question.score !== null &&
-                                question.score !== undefined && (
-                                    <div className="mt-6 rounded-lg bg-gray-50 p-4">
-
-                                        <p className="font-semibold text-gray-900">
-                                            Score: {question.score}/10
-                                        </p>
-
-                                        <p className="mt-2 text-gray-700">
-                                            {question.feedback}
-                                        </p>
-
-                                    </div>
-                                )}
-
-                        </div>
-                    ))}
-
-                </div>
-
             </div>
-
         </main>
     );
 }
