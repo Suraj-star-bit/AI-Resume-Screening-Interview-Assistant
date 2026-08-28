@@ -224,6 +224,13 @@ export default function RecruiterDashboard() {
                                         <th className="p-4 text-left font-semibold">
                                             Interview Recommendation
                                         </th>
+                                        <th className="p-4 text-left font-semibold">
+                                            Final Score
+                                        </th>
+
+                                        <th className="p-4 text-left font-semibold">
+                                            Final Recommendation
+                                        </th>
 
                                         <th className="p-4 text-left font-semibold">
                                             Matched Skills
@@ -320,22 +327,54 @@ export default function RecruiterDashboard() {
                                                     {interview ? (
                                                         <span
                                                             className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                                                                candidate.status === "Shortlisted"
+                                                                interview.recommendation === "Strong Candidate"
                                                                     ? "bg-green-100 text-green-800"
-                                                                    : candidate.status === "Rejected"
-                                                                    ? "bg-red-100 text-red-800"
-                                                                    : candidate.status === "Interview"
-                                                                    ? "bg-blue-100 text-blue-800"
-                                                                    : "bg-yellow-100 text-yellow-800"
+                                                                    : interview.recommendation === "Needs Improvement"
+                                                                    ? "bg-yellow-100 text-yellow-800"
+                                                                    : "bg-red-100 text-red-800"
                                                             }`}
                                                         >
-                                                            {candidate.status}
+                                                            {interview.recommendation}
                                                         </span>
                                                     ) : (
                                                         <span className="text-gray-400">
                                                             —
                                                         </span>
                                                     )}
+
+                                                </td>
+
+                                                {/* Final Score */}
+                                                <td className="p-4">
+
+                                                    {candidate.final_score !== null ? (
+                                                        <span className="font-bold text-gray-900">
+                                                            {candidate.final_score}%
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-500">
+                                                            Pending
+                                                        </span>
+                                                    )}
+
+                                                </td>
+                                                
+                                                {/* Final Recommendation */}
+                                                <td className="p-4">
+
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                                                            candidate.final_recommendation === "Recommended"
+                                                                ? "bg-green-100 text-green-800"
+                                                                : candidate.final_recommendation === "Review"
+                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                : candidate.final_recommendation === "Reject"
+                                                                ? "bg-red-100 text-red-800"
+                                                                : "bg-gray-100 text-gray-700"
+                                                        }`}
+                                                    >
+                                                        {candidate.final_recommendation}
+                                                    </span>
 
                                                 </td>
 
