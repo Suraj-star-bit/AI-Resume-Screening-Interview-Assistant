@@ -323,7 +323,6 @@ export default function RecruiterDashboard() {
 
                                                 {/* Interview Recommendation */}
                                                 <td className="p-4">
-
                                                     {interview ? (
                                                         <span
                                                             className={`rounded-full px-3 py-1 text-sm font-semibold ${
@@ -341,13 +340,12 @@ export default function RecruiterDashboard() {
                                                             —
                                                         </span>
                                                     )}
-
                                                 </td>
 
                                                 {/* Final Score */}
                                                 <td className="p-4">
-
-                                                    {candidate.final_score !== null ? (
+                                                    {candidate.final_score !== null &&
+                                                    candidate.final_score !== undefined ? (
                                                         <span className="font-bold text-gray-900">
                                                             {candidate.final_score}%
                                                         </span>
@@ -356,26 +354,29 @@ export default function RecruiterDashboard() {
                                                             Pending
                                                         </span>
                                                     )}
-
                                                 </td>
-                                                
+
                                                 {/* Final Recommendation */}
                                                 <td className="p-4">
-
-                                                    <span
-                                                        className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                                                            candidate.final_recommendation === "Recommended"
-                                                                ? "bg-green-100 text-green-800"
-                                                                : candidate.final_recommendation === "Review"
-                                                                ? "bg-yellow-100 text-yellow-800"
-                                                                : candidate.final_recommendation === "Reject"
-                                                                ? "bg-red-100 text-red-800"
-                                                                : "bg-gray-100 text-gray-700"
-                                                        }`}
-                                                    >
-                                                        {candidate.final_recommendation}
-                                                    </span>
-
+                                                    {candidate.final_recommendation ? (
+                                                        <span
+                                                            className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                                                                candidate.final_recommendation === "Recommended"
+                                                                    ? "bg-green-100 text-green-800"
+                                                                    : candidate.final_recommendation === "Review"
+                                                                    ? "bg-yellow-100 text-yellow-800"
+                                                                    : candidate.final_recommendation === "Reject"
+                                                                    ? "bg-red-100 text-red-800"
+                                                                    : "bg-gray-100 text-gray-700"
+                                                            }`}
+                                                        >
+                                                            {candidate.final_recommendation}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-400">
+                                                            Pending
+                                                        </span>
+                                                    )}
                                                 </td>
 
                                                 {/* Matched Skills */}
@@ -388,69 +389,67 @@ export default function RecruiterDashboard() {
                                                     {candidate.missing_skills || "—"}
                                                 </td>
 
-                                                {/* ATS Status */}
+                                                {/* Recruiter Status */}
                                                 <td className="p-4">
-
-                                                    <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800">
+                                                    <span
+                                                        className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                                                            candidate.status === "Shortlisted"
+                                                                ? "bg-green-100 text-green-800"
+                                                                : candidate.status === "Rejected"
+                                                                ? "bg-red-100 text-red-800"
+                                                                : candidate.status === "Interview"
+                                                                ? "bg-blue-100 text-blue-800"
+                                                                : "bg-yellow-100 text-yellow-800"
+                                                        }`}
+                                                    >
                                                         {candidate.status}
                                                     </span>
-
                                                 </td>
 
                                                 {/* Action */}
                                                 <td className="p-4">
+                                                    <div className="flex flex-col gap-2">
 
-                                                    {interview ? (
-                                                        <td className="p-4">
-                                                            <div className="flex flex-col gap-2">
+                                                        {interview && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    router.push(
+                                                                        `/recruiter/interviews/${interview.id}`
+                                                                    )
+                                                                }
+                                                                className="whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                                                            >
+                                                                View Interview
+                                                            </button>
+                                                        )}
 
-                                                                {interview && (
-                                                                    <button
-                                                                        onClick={() =>
-                                                                            router.push(
-                                                                                `/recruiter/interviews/${interview.id}`
-                                                                            )
-                                                                        }
-                                                                        className="whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                                                                    >
-                                                                        View Interview
-                                                                    </button>
-                                                                )}
+                                                        <button
+                                                            onClick={() =>
+                                                                updateCandidateStatus(
+                                                                    candidate.resume_id,
+                                                                    "Shortlisted"
+                                                                )
+                                                            }
+                                                            disabled={candidate.status === "Shortlisted"}
+                                                            className="whitespace-nowrap rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            Shortlist
+                                                        </button>
 
-                                                                <button
-                                                                    onClick={() =>
-                                                                        updateCandidateStatus(
-                                                                            candidate.resume_id,
-                                                                            "Shortlisted"
-                                                                        )
-                                                                    }
-                                                                    disabled={candidate.status === "Shortlisted"}
-                                                                    className="whitespace-nowrap rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                                                >
-                                                                    Shortlist
-                                                                </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                updateCandidateStatus(
+                                                                    candidate.resume_id,
+                                                                    "Rejected"
+                                                                )
+                                                            }
+                                                            disabled={candidate.status === "Rejected"}
+                                                            className="whitespace-nowrap rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            Reject
+                                                        </button>
 
-                                                                <button
-                                                                    onClick={() =>
-                                                                        updateCandidateStatus(
-                                                                            candidate.resume_id,
-                                                                            "Rejected"
-                                                                        )
-                                                                    }
-                                                                    disabled={candidate.status === "Rejected"}
-                                                                    className="whitespace-nowrap rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                                                >
-                                                                    Reject
-                                                                </button>
-
-                                                            </div>
-                                                        </td>
-                                                    ) : (
-                                                        <span className="text-gray-400">
-                                                            —
-                                                        </span>
-                                                    )}
-
+                                                    </div>
                                                 </td>
 
                                             </tr>

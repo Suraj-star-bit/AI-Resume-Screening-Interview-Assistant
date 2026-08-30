@@ -17,6 +17,10 @@ class RecruiterCandidate(BaseModel):
 
     recommendation: str | None
 
+    final_score: float | None
+
+    final_recommendation: str
+
 
 class RecruiterDashboardResponse(BaseModel):
 

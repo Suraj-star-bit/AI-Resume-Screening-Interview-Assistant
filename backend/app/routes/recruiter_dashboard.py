@@ -32,7 +32,9 @@ def recruiter_dashboard(
         "missing_skills": result["missing_skills"],
         "status": result["status"],
         "interview_score": result["interview_score"],
-        "recommendation": result["recommendation"]
+        "recommendation": result["recommendation"],
+        "final_score": result["final_score"],
+        "final_recommendation": result["final_recommendation"]
     }
     for result in results
 ]
