@@ -23,7 +23,8 @@ def change_candidate_status(
         "Review",
         "Shortlisted",
         "Rejected",
-        "Interview"
+        "Interview",
+        "Hired"
     ]
 
     if data.status not in allowed_statuses:

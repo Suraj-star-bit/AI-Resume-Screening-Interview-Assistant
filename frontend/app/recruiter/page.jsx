@@ -451,6 +451,19 @@ export default function RecruiterDashboard() {
                                                             Reject
                                                         </button>
 
+                                                        <button
+                                                            onClick={() =>
+                                                                updateCandidateStatus(
+                                                                    candidate.resume_id,
+                                                                    "Hired"
+                                                                )
+                                                            }
+                                                            disabled={candidate.status === "Hired"}
+                                                            className="whitespace-nowrap rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            Hire
+                                                        </button>
+
                                                     </div>
                                                 </td>
 
