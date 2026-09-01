@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -31,3 +31,14 @@ def get_current_user(
     user = db.query(User).filter(User.email == email).first()
 
     return user
+
+def get_current_recruiter(
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "recruiter":
+        raise HTTPException(
+            status_code=403,
+            detail="Recruiter access required"
+        )
+
+    return current_user

@@ -17,11 +17,18 @@ def create_user(db: Session, user: UserCreate):
             detail="Email already registered"
         )
 
+    if user.role not in ["candidate", "recruiter"]:
+        raise HTTPException(
+        status_code=400,
+        detail="Invalid role"
+    )
+
     new_user = User(
-    name=user.name,
-    email=user.email,
-    password=hash_password(user.password)
-)
+        name=user.name,
+        email=user.email,
+        password=hash_password(user.password),
+        role=user.role
+    )
 
     db.add(new_user)
     db.commit()
