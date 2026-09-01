@@ -1,313 +1,332 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 
-export default function CandidateDetails() {
-
+export default function RecruiterInterviewAnalysis() {
+    const params = useParams();
     const router = useRouter();
 
-    const params = useParams();
-    const searchParams = useSearchParams();
+    const interviewId = params.interviewId;
 
-    const resumeId = params.resumeId;
-    const jobId = searchParams.get("job_id");
-
-    const [candidate, setCandidate] = useState(null);
     const [interview, setInterview] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [loadingInterview, setLoadingInterview] = useState(true);
     const [error, setError] = useState("");
 
-    const [updatingStatus, setUpdatingStatus] = useState(false);
-
-const updateStatus = async (status) => {
-    try {
-        setUpdatingStatus(true);
-
-        await api.patch(
-            `/candidates/${resumeId}/status?job_id=${jobId}`,
-            {
-                status: status
-            }
-        );
-
-        setCandidate((previous) => ({
-            ...previous,
-            status: status
-        }));
-
-    } catch (error) {
-        console.log("Failed to update status:", error);
-        alert("Failed to update candidate status");
-    } finally {
-        setUpdatingStatus(false);
-    }
-};
-
     useEffect(() => {
-    if (!resumeId || !jobId) {
-        return;
-    }
+        if (!interviewId) {
+            return;
+        }
 
-    api.get(`/candidates/${resumeId}?job_id=${jobId}`)
-        .then((response) => {
-            setCandidate(response.data);
-        })
-        .catch((error) => {
-            console.log(error);
-            setError("Failed to load candidate");
-        })
-        .finally(() => {
-            setLoading(false);
-        });
+        api.get(`/interviews/${interviewId}/result`)
+            .then((response) => {
+                setInterview(response.data);
+            })
+            .catch((error) => {
+                console.log(
+                    "Failed to load interview result:",
+                    error
+                );
 
-    api.get(`/interviews/candidate/${resumeId}/${jobId}/result`)
-        .then((response) => {
-            setInterview(response.data);
-        })
-        .catch((error) => {
-            console.log("No completed interview found:", error);
-            setInterview(null);
-        })
-        .finally(() => {
-            setLoadingInterview(false);
-        });
-
-}, [resumeId, jobId]);
+                setError("Failed to load interview analysis");
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, [interviewId]);
 
     if (loading) {
         return (
             <main className="min-h-screen bg-gray-100 p-8">
                 <p className="text-gray-600">
-                    Loading candidate...
+                    Loading interview analysis...
                 </p>
             </main>
         );
     }
 
-    if (error || !candidate) {
+    if (error || !interview) {
         return (
             <main className="min-h-screen bg-gray-100 p-8">
                 <p className="text-red-600">
-                    {error || "Candidate not found"}
+                    {error || "Interview not found"}
                 </p>
             </main>
         );
     }
+
+    const questions = interview.questions || [];
 
     return (
         <main className="min-h-screen bg-gray-100 p-8">
 
-            <h1 className="text-3xl font-bold text-gray-900">
-                Candidate Details
-            </h1>
+            {/* Header */}
+            <div className="flex items-center justify-between">
 
-            <div className="mt-8 max-w-4xl rounded-xl bg-white p-8 shadow">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Interview Analysis
+                    </h1>
 
-                <h2 className="text-2xl font-bold text-gray-900">
-                    {candidate.email || "Candidate"}
-                </h2>
-
-                <p className="mt-1 text-gray-500">
-                    {candidate.filename}
-                </p>
-
-                <div className="mt-8">
-                    <h3 className="font-semibold text-gray-900">
-                        ATS Score
-                    </h3>
-
-                    <p className="mt-2 text-4xl font-bold text-blue-600">
-                        {candidate.score}%
+                    <p className="mt-2 text-gray-600">
+                        Recruiter view of candidate interview
                     </p>
                 </div>
 
-                <div className="mt-8">
-                    <h3 className="font-semibold text-gray-900">
-                        Matched Skills
-                    </h3>
+                <button
+                    onClick={() => router.back()}
+                    className="rounded-lg bg-gray-700 px-5 py-3 font-semibold text-white hover:bg-gray-800"
+                >
+                    Back
+                </button>
 
-                    <p className="mt-2 text-gray-700">
-                        {candidate.matched_skills}
+            </div>
+
+            {/* Interview Summary */}
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+
+                {/* Status */}
+                <div className="rounded-xl bg-white p-6 shadow">
+
+                    <p className="text-sm font-semibold text-gray-500">
+                        Interview Status
                     </p>
-                </div>
 
-                <div className="mt-8">
-                    <h3 className="font-semibold text-gray-900">
-                        Missing Skills
-                    </h3>
-
-                    <p className="mt-2 text-gray-700">
-                        {candidate.missing_skills}
+                    <p className="mt-2 text-xl font-bold text-green-600">
+                        {interview.status}
                     </p>
+
                 </div>
 
-                <div className="mt-8">
-                    <h3 className="font-semibold text-gray-900">
-                        Status
-                    </h3>
+                {/* Overall Score */}
+                <div className="rounded-xl bg-white p-6 shadow">
 
-                    <span className="mt-2 inline-block rounded-full bg-yellow-100 px-4 py-2 font-semibold text-yellow-800">
-                        {candidate.status}
-                    </span>
+                    <p className="text-sm font-semibold text-gray-500">
+                        Overall Score
+                    </p>
+
+                    <p className="mt-2 text-3xl font-bold text-blue-600">
+                        {interview.overall_score}/10
+                    </p>
+
                 </div>
 
-                <div className="mt-8">
-                    <h3 className="font-semibold text-gray-900">
-                        Actions
-                    </h3>
+                {/* Recommendation */}
+                <div className="rounded-xl bg-white p-6 shadow">
 
-                    <div className="mt-4 flex gap-3">
+                    <p className="text-sm font-semibold text-gray-500">
+                        Recommendation
+                    </p>
 
-                        <button
-                            onClick={() => updateStatus("Shortlisted")}
-                            disabled={updatingStatus}
-                            className="rounded-lg bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
-                        >
-                            Shortlist
-                        </button>
-
-                        <button
-                            onClick={() => updateStatus("Rejected")}
-                            disabled={updatingStatus}
-                            className="rounded-lg bg-red-600 px-5 py-3 font-semibold text-white hover:bg-red-700"
-                        >
-                            Reject
-                        </button>
-
-                        <button
-                            onClick={async () => {
-                                try {
-                                    const response = await api.post("/interviews/", {
-                                        resume_id: Number(resumeId),
-                                        job_id: Number(jobId),
-                                    });
-
-                                    router.push(`/interviews/${response.data.id}`);
-
-                                } catch (error) {
-                                    console.log("Failed to create interview:", error);
-                                    alert("Failed to create interview");
-                                }
-                            }}
-                            disabled={updatingStatus}
-                            className="rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
-                        >
-                            Move to Interview
-                        </button>
-
-                    </div>
-                </div>
-
-                {!loadingInterview && interview && (
-                    <div className="mt-8">
-
-                        <h3 className="font-semibold text-gray-900">
-                            Interview Result
-                        </h3>
-
-                        <div className="mt-4 rounded-xl bg-gray-50 p-6">
-
-                            <div className="grid gap-4 sm:grid-cols-3">
-
-                                <div>
-                                    <p className="text-sm text-gray-500">
-                                        Status
-                                    </p>
-
-                                    <p className="mt-1 font-bold text-green-600">
-                                        {interview.status}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-sm text-gray-500">
-                                        Overall Score
-                                    </p>
-
-                                    <p className="mt-1 text-2xl font-bold text-blue-600">
-                                        {interview.overall_score}/10
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-sm text-gray-500">
-                                        Recommendation
-                                    </p>
-
-                                    <p className="mt-1 font-bold text-orange-600">
-                                        {interview.recommendation}
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            <div className="mt-6">
-
-                                <h4 className="font-semibold text-gray-900">
-                                    Question Scores
-                                </h4>
-
-                                <div className="mt-4 space-y-4">
-
-                                    {interview.questions.map((question, index) => (
-                                        <div
-                                            key={question.id}
-                                            className="rounded-lg bg-white p-4 shadow-sm"
-                                        >
-
-                                            <p className="font-semibold text-gray-900">
-                                                Question {index + 1}
-                                            </p>
-
-                                            <p className="mt-1 text-gray-700">
-                                                {question.question}
-                                            </p>
-
-                                            <p className="mt-2 font-semibold text-blue-600">
-                                                Score: {question.score}/10
-                                            </p>
-
-                                            <p className="mt-2 text-sm text-gray-600">
-                                                {question.feedback}
-                                            </p>
-
-                                        </div>
-                                    ))}
-
-                                </div>
-
-                            </div>
-
-                            <button
-                                onClick={() =>
-                                    router.push(`/recruiter/interviews/${interview.id}`)
-                                }
-                                className="mt-6 rounded-lg bg-purple-600 px-5 py-3 font-semibold text-white hover:bg-purple-700"
-                            >
-                                View Full Interview
-                            </button>
-
-                        </div>
-
-                    </div>
-                )}
-
-                <div className="mt-8">
-                    <a
-                        href={`http://127.0.0.1:8000/uploads/${candidate.filename}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+                    <span
+                        className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-semibold ${
+                            interview.recommendation === "Recommended"
+                                ? "bg-green-100 text-green-800"
+                                : interview.recommendation === "Needs Improvement"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                        }`}
                     >
-                        View Resume
-                    </a>
+                        {interview.recommendation}
+                    </span>
+
                 </div>
 
             </div>
+
+            {/* Interview Details */}
+            <div className="mt-8 rounded-xl bg-white p-8 shadow">
+
+                <h2 className="text-xl font-bold text-gray-900">
+                    Interview Details
+                </h2>
+
+                <div className="mt-6 grid gap-6 md:grid-cols-3">
+
+                    <div>
+                        <p className="text-sm text-gray-500">
+                            Interview ID
+                        </p>
+
+                        <p className="mt-1 font-bold text-gray-900">
+                            {interview.id}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-gray-500">
+                            Resume ID
+                        </p>
+
+                        <p className="mt-1 font-bold text-gray-900">
+                            {interview.resume_id}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-gray-500">
+                            Job ID
+                        </p>
+
+                        <p className="mt-1 font-bold text-gray-900">
+                            {interview.job_id}
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* Questions & Answers */}
+            <div className="mt-8">
+
+                <div className="flex items-center justify-between">
+
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            Interview Questions & Evaluation
+                        </h2>
+
+                        <p className="mt-1 text-gray-600">
+                            Review each candidate response and AI evaluation.
+                        </p>
+                    </div>
+
+                    <span className="rounded-full bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
+                        {questions.length} Questions
+                    </span>
+
+                </div>
+
+                <div className="mt-6 space-y-6">
+
+                    {questions.map((question, index) => (
+
+                        <div
+                            key={question.id}
+                            className="rounded-xl bg-white p-6 shadow"
+                        >
+
+                            {/* Question Header */}
+                            <div className="flex items-start justify-between gap-4">
+
+                                <div>
+
+                                    <p className="text-sm font-semibold text-gray-500">
+                                        Question {index + 1}
+                                    </p>
+
+                                    <p className="mt-2 text-lg font-semibold text-gray-900">
+                                        {question.question}
+                                    </p>
+
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Type: {question.question_type}
+                                    </p>
+
+                                </div>
+
+                                {/* Score Badge */}
+                                <div className="shrink-0 rounded-lg bg-blue-50 px-4 py-3 text-center">
+
+                                    <p className="text-xs font-semibold text-gray-500">
+                                        SCORE
+                                    </p>
+
+                                    <p className="mt-1 text-2xl font-bold text-blue-600">
+                                        {question.score ?? "N/A"}
+                                        {question.score !== null && "/10"}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            {/* Candidate Answer */}
+                            <div className="mt-6">
+
+                                <h3 className="font-semibold text-gray-900">
+                                    Candidate Answer
+                                </h3>
+
+                                <div className="mt-2 rounded-lg bg-gray-50 p-4">
+
+                                    <p className="leading-7 text-gray-700">
+                                        {question.answer || "No answer provided"}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            {/* Score Progress */}
+                            {question.score !== null && (
+                                <div className="mt-6">
+
+                                    <div className="flex items-center justify-between">
+
+                                        <h3 className="font-semibold text-gray-900">
+                                            Performance
+                                        </h3>
+
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            {question.score}/10
+                                        </span>
+
+                                    </div>
+
+                                    <div className="mt-2 h-3 w-full overflow-hidden rounded-full bg-gray-200">
+
+                                        <div
+                                            className="h-full rounded-full bg-blue-600"
+                                            style={{
+                                                width: `${question.score * 10}%`
+                                            }}
+                                        />
+
+                                    </div>
+
+                                </div>
+                            )}
+
+                            {/* AI Feedback */}
+                            <div className="mt-6">
+
+                                <h3 className="font-semibold text-gray-900">
+                                    AI Feedback
+                                </h3>
+
+                                <div className="mt-2 rounded-lg bg-blue-50 p-4">
+
+                                    <p className="leading-7 text-gray-700">
+                                        {question.feedback || "No feedback available"}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    ))}
+
+                </div>
+
+            </div>
+
+            {/* Back Button */}
+            <div className="mt-8">
+
+                <button
+                    onClick={() => router.back()}
+                    className="rounded-lg bg-gray-700 px-6 py-3 font-semibold text-white hover:bg-gray-800"
+                >
+                    Back to Candidate
+                </button>
+
+            </div>
+
         </main>
     );
 }

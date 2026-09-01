@@ -160,6 +160,33 @@ def evaluate_interview(
     return interview
 
 @router.get(
+    "/candidate/{resume_id}/{job_id}",
+    response_model=InterviewResponse
+)
+def get_candidate_interview(
+    resume_id: int,
+    job_id: int,
+    db: Session = Depends(get_db)
+):
+    interview = (
+        db.query(Interview)
+        .filter(
+            Interview.resume_id == resume_id,
+            Interview.job_id == job_id
+        )
+        .order_by(Interview.id.desc())
+        .first()
+    )
+
+    if not interview:
+        raise HTTPException(
+            status_code=404,
+            detail="Interview not found"
+        )
+
+    return interview
+
+@router.get(
     "/candidate/{resume_id}/{job_id}/result",
     response_model=InterviewResultResponse
 )
