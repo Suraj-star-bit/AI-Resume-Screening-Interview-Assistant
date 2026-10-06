@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_db
+from app.dependencies import get_db, get_current_recruiter
 from app.crud.recruiter_dashboard import get_recruiter_dashboard
 from app.schemas.recruiter_dashboard import RecruiterDashboardResponse
 
@@ -17,7 +17,8 @@ router = APIRouter(
 )
 def recruiter_dashboard(
     job_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_recruiter)
 ):
     results = get_recruiter_dashboard(
         db=db,
@@ -27,6 +28,11 @@ def recruiter_dashboard(
     candidates = [
     {
         "resume_id": result["resume_id"],
+        "candidate_id": result["candidate_id"],
+        "candidate_name": result["candidate_name"],
+        "candidate_email": result["candidate_email"],
+        "application_id": result["application_id"],
+        "application_status": result["application_status"],
         "score": result["score"],
         "matched_skills": result["matched_skills"],
         "missing_skills": result["missing_skills"],

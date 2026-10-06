@@ -18,6 +18,9 @@ from app.models.interview_question import InterviewQuestion
 from app.routes.interview_question import router as interview_question_router
 from app.routes.interview_question import router as interview_question_router
 
+from app.routes.application import router as application_router
+from app.routes.jobs import router as jobs_router
+
 from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
@@ -53,7 +56,8 @@ app.include_router(candidate_details_router)
 app.include_router(candidate_status_router)
 app.include_router(interview_router)
 app.include_router(interview_question_router)
-
+app.include_router(application_router)
+app.include_router(jobs_router)
 
 @app.get("/")
 def root():

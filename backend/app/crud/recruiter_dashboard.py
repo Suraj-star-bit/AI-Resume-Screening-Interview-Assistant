@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 
 from app.models.ats_result import ATSResult
 from app.models.interview import Interview
+from app.models.application import Application
+from app.models.user import User
 
 
 def calculate_final_recommendation(
@@ -84,8 +86,71 @@ def get_recruiter_dashboard(db: Session, job_id: int):
             interview_score=interview_score
         )
 
+        application = (
+        db.query(Application)
+        .filter(
+            Application.resume_id == result.resume_id,
+            Application.job_id == job_id
+        )
+        .order_by(Application.id.desc())
+        .first()
+    )
+
+    candidate = None
+
+    if application:
+        candidate = (
+            db.query(User)
+            .filter(User.id == application.candidate_id)
+            .first()
+        )
+
+        application = (
+            db.query(Application)
+            .filter(
+                Application.resume_id == result.resume_id,
+                Application.job_id == job_id
+            )
+            .order_by(Application.id.desc())
+            .first()
+        )
+
+        candidate = None
+
+        if application:
+            candidate = (
+                db.query(User)
+                .filter(User.id == application.candidate_id)
+                .first()
+            )
+
         dashboard.append({
             "resume_id": result.resume_id,
+            "candidate_id": (
+                application.candidate_id
+                if application
+                else None
+            ),
+            "candidate_name": (
+                candidate.name
+                if candidate
+                else None
+            ),
+            "candidate_email": (
+                candidate.email
+                if candidate
+                else None
+            ),
+            "application_id": (
+                application.id
+                if application
+                else None
+            ),
+            "application_status": (
+                application.status
+                if application
+                else None
+            ),
             "score": result.score,
             "matched_skills": result.matched_skills,
             "missing_skills": result.missing_skills,

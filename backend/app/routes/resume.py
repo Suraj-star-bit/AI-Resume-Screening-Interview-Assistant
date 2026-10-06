@@ -16,7 +16,8 @@ from app.utils.resume_parser import (
     extract_experience
 )
 from app.crud.resume_skill import create_resume_skill
-
+from app.models.resume import Resume
+from app.schemas.resume import ResumeResponse
 
 router = APIRouter(
     prefix="/resumes",
@@ -72,3 +73,15 @@ def upload_resume(
         )
 
     return resume
+
+@router.get("/my", response_model=list[ResumeResponse])
+def get_my_resumes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return (
+        db.query(Resume)
+        .filter(Resume.owner_id == current_user.id)
+        .order_by(Resume.id.desc())
+        .all()
+    )

@@ -24,12 +24,22 @@ export default function LoginPage() {
         password,
       });
 
+      const token = response.data.access_token;
+
       localStorage.setItem(
         "access_token",
-        response.data.access_token
+        token
       );
 
-      router.push("/recruiter");
+      const payload = JSON.parse(
+        atob(token.split(".")[1])
+      );
+
+      if (payload.role === "recruiter") {
+        router.push("/recruiter");
+      } else {
+        router.push("/candidate");
+      }
     } catch (error: any) {
       console.error(error);
 

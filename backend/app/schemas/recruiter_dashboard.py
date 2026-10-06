@@ -5,6 +5,16 @@ class RecruiterCandidate(BaseModel):
 
     resume_id: int
 
+    candidate_id: int | None
+
+    candidate_name: str | None
+
+    candidate_email: str | None
+
+    application_id: int | None
+
+    application_status: str | None
+
     score: float
 
     matched_skills: str | None

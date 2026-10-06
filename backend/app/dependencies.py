@@ -41,4 +41,15 @@ def get_current_recruiter(
             detail="Recruiter access required"
         )
 
+def get_current_candidate(
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "candidate":
+        raise HTTPException(
+            status_code=403,
+            detail="Candidate access required"
+        )
+
+    return current_user
+
     return current_user
