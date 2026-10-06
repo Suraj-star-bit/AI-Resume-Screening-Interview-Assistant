@@ -47,21 +47,37 @@ def calculate_final_recommendation(
 
 def get_recruiter_dashboard(db: Session, job_id: int):
 
-    results = (
-        db.query(ATSResult)
-        .filter(ATSResult.job_id == job_id)
-        .order_by(ATSResult.score.desc())
+    applications = (
+        db.query(Application)
+        .filter(Application.job_id == job_id)
+        .order_by(Application.id.desc())
         .all()
     )
 
     dashboard = []
 
-    for result in results:
+    for application in applications:
+
+        candidate = (
+            db.query(User)
+            .filter(User.id == application.candidate_id)
+            .first()
+        )
+
+        result = (
+            db.query(ATSResult)
+            .filter(
+                ATSResult.resume_id == application.resume_id,
+                ATSResult.job_id == job_id
+            )
+            .order_by(ATSResult.id.desc())
+            .first()
+        )
 
         interview = (
             db.query(Interview)
             .filter(
-                Interview.resume_id == result.resume_id,
+                Interview.resume_id == application.resume_id,
                 Interview.job_id == job_id,
                 Interview.status == "Completed"
             )
@@ -81,56 +97,31 @@ def get_recruiter_dashboard(db: Session, job_id: int):
             else None
         )
 
-        final_result = calculate_final_recommendation(
-            ats_score=result.score,
-            interview_score=interview_score
-        )
-
-        application = (
-        db.query(Application)
-        .filter(
-            Application.resume_id == result.resume_id,
-            Application.job_id == job_id
-        )
-        .order_by(Application.id.desc())
-        .first()
-    )
-
-    candidate = None
-
-    if application:
-        candidate = (
-            db.query(User)
-            .filter(User.id == application.candidate_id)
-            .first()
-        )
-
-        application = (
-            db.query(Application)
-            .filter(
-                Application.resume_id == result.resume_id,
-                Application.job_id == job_id
+        if result:
+            final_result = calculate_final_recommendation(
+                ats_score=result.score,
+                interview_score=interview_score
             )
-            .order_by(Application.id.desc())
-            .first()
-        )
 
-        candidate = None
+            ats_score = result.score
+            matched_skills = result.matched_skills
+            missing_skills = result.missing_skills
+            ats_status = result.status
 
-        if application:
-            candidate = (
-                db.query(User)
-                .filter(User.id == application.candidate_id)
-                .first()
-            )
+        else:
+            final_result = {
+                "final_score": None,
+                "final_recommendation": "Pending ATS"
+            }
+
+            ats_score = None
+            matched_skills = None
+            missing_skills = None
+            ats_status = "Pending"
 
         dashboard.append({
-            "resume_id": result.resume_id,
-            "candidate_id": (
-                application.candidate_id
-                if application
-                else None
-            ),
+            "resume_id": application.resume_id,
+            "candidate_id": application.candidate_id,
             "candidate_name": (
                 candidate.name
                 if candidate
@@ -141,20 +132,12 @@ def get_recruiter_dashboard(db: Session, job_id: int):
                 if candidate
                 else None
             ),
-            "application_id": (
-                application.id
-                if application
-                else None
-            ),
-            "application_status": (
-                application.status
-                if application
-                else None
-            ),
-            "score": result.score,
-            "matched_skills": result.matched_skills,
-            "missing_skills": result.missing_skills,
-            "status": result.status,
+            "application_id": application.id,
+            "application_status": application.status,
+            "score": ats_score,
+            "matched_skills": matched_skills,
+            "missing_skills": missing_skills,
+            "status": ats_status,
             "interview_score": interview_score,
             "recommendation": interview_recommendation,
             "final_score": final_result["final_score"],

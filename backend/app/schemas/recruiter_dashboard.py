@@ -15,7 +15,7 @@ class RecruiterCandidate(BaseModel):
 
     application_status: str | None
 
-    score: float
+    score: float | None
 
     matched_skills: str | None
 
