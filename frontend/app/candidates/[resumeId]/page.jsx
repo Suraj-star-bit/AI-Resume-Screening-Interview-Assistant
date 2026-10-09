@@ -93,7 +93,7 @@ export default function RecruiterInterviewAnalysis() {
                         Interview Status
                     </p>
 
-                    <p className="mt-2 text-xl font-bold text-green-600">
+                    <p className="mt-2 text-xl font-bold text-gray-900 text-green-600">
                         {interview.status}
                     </p>
 
@@ -138,14 +138,14 @@ export default function RecruiterInterviewAnalysis() {
             {/* Interview Details */}
             <div className="mt-8 rounded-xl bg-white p-8 shadow">
 
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 text-gray-900">
                     Interview Details
                 </h2>
 
                 <div className="mt-6 grid gap-6 md:grid-cols-3">
 
                     <div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-600">
                             Interview ID
                         </p>
 
@@ -155,7 +155,7 @@ export default function RecruiterInterviewAnalysis() {
                     </div>
 
                     <div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-600">
                             Resume ID
                         </p>
 
@@ -165,7 +165,7 @@ export default function RecruiterInterviewAnalysis() {
                     </div>
 
                     <div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-600">
                             Job ID
                         </p>
 
@@ -221,7 +221,7 @@ export default function RecruiterInterviewAnalysis() {
                                         {question.question}
                                     </p>
 
-                                    <p className="mt-2 text-sm text-gray-500">
+                                    <p className="mt-2 text-sm text-gray-600">
                                         Type: {question.question_type}
                                     </p>
 

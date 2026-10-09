@@ -130,7 +130,7 @@ export default function CandidateDashboard() {
 
         <section className="mt-8 rounded-xl bg-white p-6 shadow">
 
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-xl font-semibold text-gray-900">
             Select Resume
           </h2>
 
@@ -163,7 +163,7 @@ export default function CandidateDashboard() {
 
         <section className="mt-8">
 
-          <h2 className="text-2xl font-semibold">
+          <h2 className="text-2xl font-semibold text-gray-900">
             Available Jobs
           </h2>
 
@@ -180,7 +180,7 @@ export default function CandidateDashboard() {
                   {job.title}
                 </h3>
 
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-600">
                   Job ID: {job.id}
                 </p>
 
@@ -233,7 +233,7 @@ export default function CandidateDashboard() {
 
         <section className="mt-12">
 
-          <h2 className="text-2xl font-semibold">
+          <h2 className="text-2xl font-semibold text-gray-900">
             My Applications
           </h2>
 
@@ -254,23 +254,23 @@ export default function CandidateDashboard() {
                   <thead className="bg-gray-100">
 
                     <tr>
-                      <th className="p-4 text-left">
+                      <th className="p-4 text-left font-semibold text-gray-800">
                         Application ID
                       </th>
 
-                      <th className="p-4 text-left">
+                      <th className="p-4 text-left font-semibold text-gray-800">
                         Job ID
                       </th>
 
-                      <th className="p-4 text-left">
+                      <th className="p-4 text-left font-semibold text-gray-800">
                         Resume
                       </th>
 
-                      <th className="p-4 text-left">
+                      <th className="p-4 text-left font-semibold text-gray-800">
                         Status
                       </th>
 
-                      <th className="p-4 text-left">
+                      <th className="p-4 text-left font-semibold text-gray-800">
                         Applied At
                       </th>
                     </tr>

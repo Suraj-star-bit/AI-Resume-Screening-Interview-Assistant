@@ -65,7 +65,7 @@ className="mb-6 text-sm font-medium text-gray-500 hover:text-gray-900"
         Sign in to your account
       </p>
 
-      <p className="mt-2 text-sm text-gray-500">
+      <p className="mt-2 text-sm text-gray-600">
         Access your candidate or recruiter dashboard.
       </p>
     </div>

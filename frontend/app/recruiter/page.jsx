@@ -181,7 +181,7 @@ export default function RecruiterDashboard() {
             {/* Candidate Section */}
             <div className="mt-8">
 
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 text-gray-900">
                     Ranked Candidates
                 </h2>
 
@@ -209,11 +209,11 @@ export default function RecruiterDashboard() {
                                 <thead className="bg-gray-100">
                                     <tr>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Candidate
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             ATS Score
                                         </th>
 
@@ -221,30 +221,30 @@ export default function RecruiterDashboard() {
                                             Interview Score
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Interview Recommendation
                                         </th>
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Final Score
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Final Recommendation
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Matched Skills
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Missing Skills
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Status
                                         </th>
 
-                                        <th className="p-4 text-left font-semibold">
+                                        <th className="p-4 text-left font-semibold text-gray-800">
                                             Action
                                         </th>
 

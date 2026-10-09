@@ -227,12 +227,12 @@ export default function InterviewPage() {
                                 {questions.length}
                             </p>
 
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-600">
                                 {currentQuestion.question_type}
                             </p>
                         </div>
 
-                        <h2 className="mt-4 text-xl font-semibold leading-relaxed text-gray-900">
+                        <h2 className="mt-4 text-xl font-semibold text-gray-900 leading-relaxed text-gray-900">
                             {currentQuestion.question}
                         </h2>
 
@@ -288,7 +288,7 @@ export default function InterviewPage() {
 
                         <div className="mt-6 rounded-lg bg-gray-50 p-6">
 
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-600">
                                 Overall Score
                             </p>
 
@@ -296,11 +296,11 @@ export default function InterviewPage() {
                                 {interview.overall_score}/10
                             </p>
 
-                            <p className="mt-4 text-sm text-gray-500">
+                            <p className="mt-4 text-sm text-gray-600">
                                 Recommendation
                             </p>
 
-                            <p className="mt-1 text-xl font-bold text-orange-600">
+                            <p className="mt-1 text-xl font-bold text-gray-900 text-orange-600">
                                 {interview.recommendation}
                             </p>
 
