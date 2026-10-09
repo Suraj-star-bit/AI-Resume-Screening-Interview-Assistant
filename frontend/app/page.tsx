@@ -1,246 +1,82 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface Candidate {
-  resume_id: number;
-  score: number;
-  matched_skills: string;
-  missing_skills: string;
-  status: string;
-}
-
-interface DashboardData {
-  job_id: number;
-  candidates: Candidate[];
-}
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [jobId, setJobId] = useState("3");
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+const router = useRouter();
 
-  const fetchDashboard = async () => {
-    if (!jobId) {
-      setError("Please enter a Job ID");
-      return;
-    }
+return ( <main className="flex min-h-screen flex-col bg-gray-50 text-gray-900"> <header className="border-b border-gray-200 bg-white"> <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5"> <h1 className="text-xl font-bold tracking-tight">
+AI Resume Screening </h1>
 
-    setLoading(true);
-    setError("");
 
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/recruiter/dashboard?job_id=${jobId}`
-      );
+      <button
+        onClick={() => router.push("/login")}
+        className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700"
+      >
+        Login
+      </button>
+    </div>
+  </header>
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch recruiter dashboard");
-      }
+  <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 py-16">
+    <div className="max-w-3xl">
+      <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-blue-700">
+        AI-powered recruitment
+      </p>
 
-      const result = await response.json();
-      setData(result);
-    } catch (err) {
-      console.error(err);
-      setError(
-        "Could not connect to the backend. Make sure FastAPI is running."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      <h2 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+        Smarter hiring.
+        <span className="block text-gray-500">
+          Better opportunities.
+        </span>
+      </h2>
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+      <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-600">
+        Screen resumes, evaluate candidate skills, conduct AI-assisted
+        interviews, and manage hiring decisions in one place.
+      </p>
+    </div>
 
-  return (
-    <main className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="border-b bg-white px-8 py-5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              AI Resume Screening
-            </h1>
-            <p className="text-sm text-gray-500">
-              Recruiter Dashboard
-            </p>
-          </div>
+    <div className="mt-12 grid gap-6 md:grid-cols-2">
+      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <h3 className="text-xl font-semibold">I'm a Candidate</h3>
 
-          <div className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white">
-            Recruiter
-          </div>
-        </div>
-      </header>
+        <p className="mt-3 leading-7 text-gray-600">
+          Explore job opportunities, apply with your resume, and track
+          your application status.
+        </p>
 
-      {/* Content */}
-      <section className="mx-auto max-w-7xl px-8 py-8">
-        {/* Job selector */}
-        <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-1 text-xl font-semibold text-gray-900">
-            Candidate Screening
-          </h2>
+        <button
+          onClick={() => router.push("/login?role=candidate")}
+          className="mt-6 w-full rounded-lg border border-gray-300 px-5 py-3 font-semibold hover:bg-gray-50"
+        >
+          Candidate Login
+        </button>
+      </div>
 
-          <p className="mb-5 text-sm text-gray-500">
-            Enter a Job ID to view ranked candidates.
-          </p>
+      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+        <h3 className="text-xl font-semibold">I'm a Recruiter</h3>
 
-          <div className="flex max-w-md gap-3">
-            <input
-              type="number"
-              value={jobId}
-              onChange={(e) => setJobId(e.target.value)}
-              placeholder="Enter Job ID"
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-900 outline-none focus:border-gray-900"
-            />
+        <p className="mt-3 leading-7 text-gray-600">
+          Create job listings, screen applicants, review interview
+          results, and manage hiring decisions.
+        </p>
 
-            <button
-              onClick={fetchDashboard}
-              disabled={loading}
-              className="rounded-lg bg-gray-900 px-5 py-2 font-medium text-white hover:bg-gray-700 disabled:opacity-50"
-            >
-              {loading ? "Loading..." : "Screen Candidates"}
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => router.push("/login?role=recruiter")}
+          className="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 font-semibold text-white hover:bg-gray-700"
+        >
+          Recruiter Login
+        </button>
+      </div>
+    </div>
+  </section>
 
-        {/* Error */}
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+  <footer className="border-t border-gray-200 bg-white px-6 py-5 text-center text-sm text-gray-500">
+    AI Resume Screening &amp; Interview Assistant
+  </footer>
+</main>
 
-        {/* Dashboard stats */}
-        {data && (
-          <>
-            <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-              <div className="rounded-xl bg-white p-6 shadow-sm">
-                <p className="text-sm text-gray-500">Job ID</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  #{data.job_id}
-                </p>
-              </div>
 
-              <div className="rounded-xl bg-white p-6 shadow-sm">
-                <p className="text-sm text-gray-500">
-                  Candidates
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {data.candidates.length}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-white p-6 shadow-sm">
-                <p className="text-sm text-gray-500">
-                  Top Score
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {data.candidates.length > 0
-                    ? Math.max(
-                        ...data.candidates.map(
-                          (candidate) => candidate.score
-                        )
-                      )
-                    : 0}
-                  %
-                </p>
-              </div>
-            </div>
-
-            {/* Candidates */}
-            <div className="rounded-xl bg-white shadow-sm">
-              <div className="border-b px-6 py-5">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Ranked Candidates
-                </h2>
-              </div>
-
-              {data.candidates.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  No candidates found for this job.
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {data.candidates.map((candidate) => (
-                    <div
-                      key={candidate.resume_id}
-                      className="p-6"
-                    >
-                      <div className="flex flex-col justify-between gap-5 md:flex-row">
-                        {/* Candidate */}
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            Resume #{candidate.resume_id}
-                          </h3>
-
-                          <p className="mt-1 text-sm text-gray-500">
-                            Status: {candidate.status}
-                          </p>
-                        </div>
-
-                        {/* Score */}
-                        <div className="text-left md:text-right">
-                          <p className="text-sm text-gray-500">
-                            ATS Score
-                          </p>
-
-                          <p className="text-3xl font-bold text-gray-900">
-                            {candidate.score}%
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Skills */}
-                      <div className="mt-5 grid gap-5 md:grid-cols-2">
-                        <div>
-                          <p className="mb-2 text-sm font-semibold text-gray-700">
-                            Matched Skills
-                          </p>
-
-                          <div className="flex flex-wrap gap-2">
-                            {candidate.matched_skills
-                              .split(",")
-                              .map((skill) => (
-                                <span
-                                  key={skill}
-                                  className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-700"
-                                >
-                                  ✓ {skill.trim()}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="mb-2 text-sm font-semibold text-gray-700">
-                            Missing Skills
-                          </p>
-
-                          <div className="flex flex-wrap gap-2">
-                            {candidate.missing_skills
-                              .split(",")
-                              .map((skill) => (
-                                <span
-                                  key={skill}
-                                  className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-700"
-                                >
-                                  {skill.trim()}
-                                </span>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </section>
-    </main>
-  );
+);
 }
