@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+import os
 
 from app.database import Base, engine
 from app.models.user import User
@@ -38,6 +39,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        os.getenv("FRONTEND_URL", ""),
     ],
     allow_credentials=True,
     allow_methods=["*"],

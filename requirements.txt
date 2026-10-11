@@ -1,0 +1,15 @@
+
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+python-dotenv
+python-multipart
+pymupdf
+python-jose[cryptography]
+passlib
+bcrypt
+pydantic[email]
+openai
+requests
+
