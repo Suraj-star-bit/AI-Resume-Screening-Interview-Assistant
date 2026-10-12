@@ -30,6 +30,7 @@ export default function CandidateDashboard() {
   const [selectedResume, setSelectedResume] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const loadData = async () => {
     try {
@@ -63,6 +64,42 @@ export default function CandidateDashboard() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const uploadResume = async (
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  if (file.type !== "application/pdf") {
+    setMessage("Please upload a PDF resume.");
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    setUploading(true);
+    setMessage("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await api.post("/resumes/upload", formData);
+
+    setMessage("Resume uploaded successfully!");
+    await loadData();
+  } catch (error: any) {
+    console.error(error);
+    setMessage(
+      error?.response?.data?.detail ||
+      "Failed to upload resume. Please try again."
+    );
+  } finally {
+    setUploading(false);
+    event.target.value = "";
+  }
+};
 
   const hasApplied = (jobId: number) => {
     return applications.some(
@@ -129,6 +166,32 @@ export default function CandidateDashboard() {
         {/* Resume Selection */}
 
         <section className="mt-8 rounded-xl bg-white p-6 shadow">
+
+          <h2 className="text-xl font-semibold text-gray-900">
+            Upload Resume
+          </h2>
+
+          <p className="mt-2 text-gray-600">
+            Choose your resume in PDF format.
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <input
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={uploadResume}
+              disabled={uploading}
+              className="block max-w-full text-sm text-gray-700"
+            />
+
+            {uploading && (
+              <span className="text-blue-600">
+                Uploading...
+              </span>
+            )}
+          </div>
+
+          <div className="my-6 border-t" />
 
           <h2 className="text-xl font-semibold text-gray-900">
             Select Resume
