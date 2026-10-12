@@ -1,9 +1,9 @@
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import DATABASE_URL
 
-# Explicitly use psycopg2, which is installed by psycopg2-binary.
 database_url = DATABASE_URL
 
 if database_url and database_url.startswith("postgresql://"):
@@ -13,7 +13,12 @@ if database_url and database_url.startswith("postgresql://"):
         1
     )
 
-engine = create_engine(database_url)
+engine = create_engine(
+    database_url,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    connect_args={"sslmode": "require"},
+)
 
 SessionLocal = sessionmaker(
     autocommit=False,
