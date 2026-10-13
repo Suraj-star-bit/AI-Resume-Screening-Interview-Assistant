@@ -133,6 +133,46 @@ export default function CandidateDashboard() {
     }
   };
 
+
+  const openInterview = async (
+    resumeId: number,
+    jobId: number
+  ) => {
+    try {
+      setMessage("");
+
+      let interviewId: number;
+
+      try {
+        const response = await api.get(
+          `/interviews/candidate/${resumeId}/${jobId}`
+        );
+
+        interviewId = response.data.id;
+      } catch (error: any) {
+        if (error.response?.status !== 404) {
+          throw error;
+        }
+
+        const response = await api.post("/interviews/", {
+          resume_id: resumeId,
+          job_id: jobId,
+        });
+
+        interviewId = response.data.id;
+      }
+
+      window.location.href = `/interviews/${interviewId}`;
+    } catch (error: any) {
+      console.error(error);
+      setMessage(
+        error?.response?.data?.detail ||
+        "Could not open the interview."
+      );
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="min-h-screen p-8">
@@ -336,7 +376,16 @@ export default function CandidateDashboard() {
                       <th className="p-4 text-left font-semibold text-gray-800">
                         Applied At
                       </th>
+
+
+                      <th className="p-4 text-left font-semibold text-gray-800">
+                        Interview
+                      </th>
+                      
+
                     </tr>
+
+  
 
                   </thead>
 
@@ -374,6 +423,28 @@ export default function CandidateDashboard() {
                             application.applied_at
                           ).toLocaleString()}
                         </td>
+
+
+                      <td className="p-4">
+                        {new Date(
+                          application.applied_at
+                        ).toLocaleString()}
+                      </td>
+
+                      <td className="p-4">
+                        <button
+                          onClick={() =>
+                            openInterview(
+                              application.resume_id,
+                              application.job_id
+                            )
+                          }
+                          className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                        >
+                          Open Interview
+                        </button>
+                      </td>
+
 
                       </tr>
 
