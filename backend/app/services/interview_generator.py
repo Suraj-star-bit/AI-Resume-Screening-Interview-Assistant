@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
+import os
 import requests
+from openai import OpenAI
 
 from app.models.interview import Interview
 from app.models.resume import Resume
@@ -85,30 +87,51 @@ Rules:
 7. Return only the questions, one per line.
 """
 
-    response = requests.post(
-        "http://localhost:11434/api/chat",
-        json={
-            "model": "llama3.2",
-            "messages": [
+    if os.getenv("GROQ_API_KEY"):
+        client = OpenAI(
+            api_key=os.getenv("GROQ_API_KEY"),
+            base_url="https://api.groq.com/openai/v1"
+        )
+
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert technical interviewer."
+                    "content": "You are an expert technical interviewer. Return only five interview questions, one per line."
                 },
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-            "stream": False
-        }
-    )
+            temperature=0.7
+        )
 
-    response.raise_for_status()
+        content = response.choices[0].message.content or ""
 
-    data = response.json()
+    else:
+        response = requests.post(
+            "http://localhost:11434/api/chat",
+            json={
+                "model": "llama3.2",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an expert technical interviewer."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "stream": False
+            },
+            timeout=120
+        )
 
-    content = data["message"]["content"]
-
+        response.raise_for_status()
+        content = response.json()["message"]["content"]
     questions = []
 
     for line in content.split("\n"):
