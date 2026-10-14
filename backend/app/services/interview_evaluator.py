@@ -1,5 +1,8 @@
-import requests
+
 import json
+import os
+import requests
+from openai import OpenAI
 
 
 def evaluate_answer(
@@ -7,16 +10,13 @@ def evaluate_answer(
     answer: str,
     job_skills: list[str]
 ):
-    """
-    Evaluate a candidate's interview answer using Llama 3.2
-    through Ollama.
-    """
+    """Evaluate a candidate's interview answer using Groq or local Ollama."""
 
     if not answer.strip():
         return {
             "score": 0.0,
             "feedback": "The candidate did not provide an answer.",
-            "recommendation": "Reject"
+            "recommendation": "Weak"
         }
 
     skills = ", ".join(job_skills)
@@ -35,20 +35,19 @@ CANDIDATE ANSWER:
 REQUIRED JOB SKILLS:
 {skills}
 
-Evaluate the answer based on:
+Evaluate based on:
 1. Technical correctness
-2. Understanding of the topic
-3. Relevance to the question
+2. Understanding
+3. Relevance
 4. Practical experience
 5. Clarity and completeness
 
 Give a score from 0 to 10.
 
-Return ONLY valid JSON in exactly this format:
-
+Return ONLY valid JSON in this format:
 {{
     "score": 7,
-    "feedback": "Brief explanation of the candidate's strengths and weaknesses.",
+    "feedback": "Brief explanation of strengths and weaknesses.",
     "recommendation": "Strong"
 }}
 
@@ -58,50 +57,81 @@ Needs Improvement
 Weak
 """
 
-    response = requests.post(
-        "http://localhost:11434/api/chat",
-        json={
-            "model": "llama3.2",
-            "messages": [
+    if os.getenv("GROQ_API_KEY"):
+        client = OpenAI(
+            api_key=os.getenv("GROQ_API_KEY"),
+            base_url="https://api.groq.com/openai/v1"
+        )
+
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert technical interviewer. Return only valid JSON."
+                    "content": (
+                        "You are an expert technical interviewer. "
+                        "Return only valid JSON with score, feedback, "
+                        "and recommendation."
+                    )
                 },
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-            "stream": False
-        }
-    )
+            temperature=0.2
+        )
 
-    response.raise_for_status()
+        content = response.choices[0].message.content or ""
 
-    data = response.json()
+    else:
+        response = requests.post(
+            "http://localhost:11434/api/chat",
+            json={
+                "model": "llama3.2",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Return only valid JSON."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "stream": False
+            },
+            timeout=120
+        )
 
-    content = data["message"]["content"].strip()
+        response.raise_for_status()
+        content = response.json()["message"]["content"]
 
-    # Remove markdown code fences if Llama adds them
+    content = content.strip()
+
     if content.startswith("```"):
         content = content.replace("```json", "")
-        content = content.replace("```", "")
-        content = content.strip()
+        content = content.replace("```", "").strip()
 
     result = json.loads(content)
 
+    score = float(result["score"])
+    if not 0 <= score <= 10:
+        raise ValueError("Interview score must be between 0 and 10.")
+
+    recommendation = result["recommendation"]
+    if recommendation not in {"Strong", "Needs Improvement", "Weak"}:
+        recommendation = "Needs Improvement"
+
     return {
-        "score": float(result["score"]),
-        "feedback": result["feedback"],
-        "recommendation": result["recommendation"]
+        "score": score,
+        "feedback": str(result["feedback"]),
+        "recommendation": recommendation
     }
 
 
 def calculate_overall_score(scores: list[float]):
-    """
-    Calculate the overall interview score
-    from individual question scores.
-    """
+    """Calculate the overall interview score from individual question scores."""
 
     if not scores:
         return {
